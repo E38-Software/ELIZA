@@ -1,0 +1,228 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --screen: #061109;
+  --terminal: #020903;
+  --line: #24432a;
+  --separator: #142719;
+  --phosphor: #a4e9a6;
+  --phosphor-strong: #75cf80;
+  --quiet: #76917a;
+  --terminal-font-size: 16px;
+  --font-terminal: 'Cascadia Code', Consolas, 'Liberation Mono', monospace;
+  --font-interface: system-ui, sans-serif;
+  @apply font-[family-name:var(--font-terminal)] text-[color:var(--phosphor)];
+}
+
+html {
+  @apply min-h-full;
+}
+
+body[data-theme='amber'] {
+  --screen: #1a0e00;
+  --terminal: #100900;
+  --line: #70501d;
+  --separator: #49320e;
+  --phosphor: #ffe0a2;
+  --phosphor-strong: #ffc462;
+  --quiet: #d7ae77;
+}
+
+:focus-visible {
+  @apply outline outline-2 outline-offset-[3px] outline-[color:var(--phosphor)];
+}
+
+.terminal-shell {
+  @apply w-[calc(100%-32px)] max-w-[760px] pb-6 pt-7 max-[480px]:w-[calc(100%-24px)] max-[480px]:pt-[18px];
+}
+
+.terminal-header {
+  @apply gap-3 border-b border-[color:var(--line)] px-0.5 pb-3 max-[480px]:flex-col max-[480px]:items-start max-[480px]:gap-[5px];
+}
+
+.terminal-header h1 {
+  @apply m-0 text-[16px] font-semibold tracking-[0.12em] text-[color:var(--phosphor)];
+}
+
+.tool-note {
+  @apply text-[color:var(--quiet)];
+}
+
+.terminal-window {
+  @apply relative mt-4 bg-transparent;
+}
+
+.session-line {
+  @apply z-[2] gap-x-[18px] gap-y-2 border-b border-[color:var(--separator)] pb-2.5 text-[9px] tracking-[0.06em] text-[color:var(--quiet)];
+}
+
+.session-line > span {
+  @apply min-w-0 [overflow-wrap:anywhere];
+}
+
+.session-line strong {
+  @apply font-medium text-[color:var(--phosphor-strong)];
+}
+
+.terminal-scroll {
+  @apply min-h-[min(52vh,440px)] max-h-[min(72vh,700px)] pb-1.5 pr-0.5 max-[480px]:min-h-[min(54vh,460px)] max-[480px]:max-h-[72vh];
+  scrollbar-color: var(--line) var(--screen);
+  scrollbar-width: thin;
+}
+
+.conversation {
+  @apply m-0 gap-4 p-0 pb-0.5 [overflow-wrap:anywhere];
+}
+
+.message {
+  @apply max-w-full border-l border-[color:var(--line)] pl-2.5 [overflow-wrap:anywhere];
+}
+
+.message-user {
+  @apply border-[color:var(--phosphor-strong)];
+}
+
+.message-safety {
+  @apply border-[color:var(--phosphor)];
+}
+
+.message-label {
+  @apply mb-1 block text-[9px] tracking-[0.08em] text-[color:var(--quiet)];
+}
+
+.message-user .message-label {
+  @apply text-[color:var(--phosphor-strong)];
+}
+
+.message-body {
+  @apply m-0 whitespace-pre-wrap text-[length:var(--terminal-font-size)] leading-[1.65] text-[color:var(--phosphor)] [overflow-wrap:anywhere] [word-break:break-word];
+}
+
+.prompt-form {
+  @apply mt-0.5 gap-[0.65ch] border-b border-transparent px-px pb-1 pt-[3px] focus-within:border-[color:var(--phosphor-strong)];
+}
+
+.prompt-label {
+  @apply flex-none;
+}
+
+.prompt-symbol {
+  @apply text-[length:var(--terminal-font-size)] leading-[1.55] text-[color:var(--phosphor-strong)];
+}
+
+.prompt-form input[type='text'] {
+  @apply h-[1.55em] w-full min-w-0 rounded-none border-0 border-none bg-transparent p-0 text-[length:var(--terminal-font-size)] leading-[1.55] text-[color:var(--phosphor)] caret-[color:var(--phosphor)] shadow-none [outline:none];
+}
+
+.quiet-button {
+  @apply min-h-[34px] min-w-0 max-w-full cursor-pointer rounded-none border border-[color:var(--line)] bg-transparent px-2.5 py-[5px] text-[11px] text-[color:var(--phosphor)] [overflow-wrap:anywhere] hover:border-[color:var(--phosphor-strong)];
+}
+
+.disclaimer {
+  @apply mx-0.5 mt-[13px] font-[family-name:var(--font-interface)] text-[12px] leading-[1.6] text-[color:var(--phosphor)] [overflow-wrap:anywhere];
+}
+
+.local-tools {
+  @apply mt-[17px] grid gap-2;
+}
+
+.tool-section {
+  @apply border-y border-[color:var(--line)];
+}
+
+.tool-section + .tool-section {
+  @apply border-t-0;
+}
+
+.tool-section > summary,
+.trace-details > summary {
+  @apply cursor-pointer px-0.5 py-2.5 text-[11px] text-[color:var(--phosphor-strong)] [overflow-wrap:anywhere];
+}
+
+.tool-content {
+  @apply px-0.5 pb-3;
+}
+
+.check-row {
+  @apply flex min-h-[34px] min-w-0 cursor-pointer items-center gap-[9px] font-[family-name:var(--font-interface)] text-[11px] leading-[1.5] text-[color:var(--phosphor)] [overflow-wrap:anywhere];
+}
+
+.check-row input {
+  @apply shrink-0 accent-[color:var(--phosphor-strong)];
+}
+
+.tool-note {
+  @apply mb-2.5 mt-[3px] font-[family-name:var(--font-interface)] text-[10px] leading-[1.5] [overflow-wrap:anywhere];
+}
+
+.session-help {
+  @apply m-0 text-[11px] leading-[1.6];
+}
+
+.trace-details {
+  @apply border-t border-[color:var(--separator)];
+}
+
+.trace-content {
+  @apply max-h-[360px] overflow-auto px-0.5 pb-2.5 [overflow-wrap:anywhere];
+}
+
+.trace-fields {
+  @apply m-0 grid gap-[9px];
+}
+
+.trace-field {
+  @apply border-t border-[color:var(--separator)] pt-[7px];
+}
+
+.trace-field dt {
+  @apply mb-1 text-[10px] text-[color:var(--phosphor-strong)] [overflow-wrap:anywhere];
+}
+
+.trace-field dd {
+  @apply m-0 max-h-40 overflow-auto whitespace-pre-wrap text-[10px] leading-[1.5] text-[color:var(--quiet)] [overflow-wrap:anywhere] [word-break:break-word];
+}
+
+.settings-grid {
+  @apply grid grid-cols-2 gap-x-5 gap-y-2 max-[480px]:grid-cols-1 max-[480px]:gap-[10px];
+}
+
+.setting {
+  @apply grid min-w-0 content-start gap-[7px] font-[family-name:var(--font-interface)] text-[11px] text-[color:var(--phosphor)];
+}
+
+.setting > span {
+  @apply flex min-w-0 flex-wrap justify-between gap-[5px] [overflow-wrap:anywhere];
+}
+
+.setting output {
+  @apply text-[color:var(--quiet)];
+}
+
+.setting select {
+  @apply min-h-[34px] min-w-0 max-w-full rounded-none border border-[color:var(--line)] bg-[color:var(--terminal)] px-[7px] py-1 text-[color:var(--phosphor)];
+}
+
+.setting input[type='range'] {
+  @apply my-[5px] w-full min-w-0 accent-[color:var(--phosphor-strong)];
+}
+
+.setting-actions {
+  @apply col-span-full flex min-w-0 flex-wrap items-center gap-2 border-t border-[color:var(--separator)] pt-[5px] max-[480px]:col-auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#061109" />
+    <meta
+      name="description"
+      content="Una ricostruzione locale di ELIZA, il programma conversazionale basato su regole."
+    />
+    <title>ELIZA — Terminale locale</title>
+  </head>
+  <body
+    class="min-h-screen bg-[color:var(--screen)] text-[color:var(--phosphor)]"
+    data-theme="green"
+  >
+    <div class="terminal-shell mx-auto">
+      <header class="terminal-header flex items-baseline justify-between">
+        <h1 id="terminal-title">ELIZA</h1>
+        <div
+          class="flex min-w-0 max-w-full flex-wrap items-center gap-2 font-[family-name:var(--font-interface)] text-[11px] text-[color:var(--quiet)]"
+        >
+          <span>App web di</span>
+          <a
+            href="https://e38.it"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex max-w-full items-center gap-1"
+          >
+            <img
+              src="./src/assets/e38-logo.webp"
+              alt="e38 srl"
+              width="48"
+              height="22"
+              class="h-auto w-12 max-w-full"
+            />
+            <span aria-hidden="true">↗</span>
+            <span class="sr-only"> (si apre in una nuova scheda)</span>
+          </a>
+        </div>
+      </header>
+
+      <main aria-labelledby="terminal-title">
+        <section class="terminal-window" data-motion="on" aria-label="Terminale ELIZA">
+          <div
+            id="terminal-scroll"
+            class="terminal-scroll relative overflow-x-hidden overflow-y-auto"
+            role="region"
+            aria-label="Sessione conversazionale"
+            tabindex="0"
+          >
+            <ol
+              id="conversation"
+              class="conversation flex list-none flex-col"
+              aria-label="Cronologia della conversazione"
+              aria-live="off"
+              aria-relevant="additions"
+            ></ol>
+
+            <form
+              id="prompt-form"
+              class="prompt-form flex min-w-0 items-baseline"
+              aria-label="Riga di input"
+              autocomplete="off"
+            >
+              <label class="prompt-label" for="prompt-input">
+                <span class="prompt-symbol" aria-hidden="true">&gt;</span>
+                <span class="sr-only">Scrivi un messaggio o un comando locale</span>
+              </label>
+              <input
+                id="prompt-input"
+                name="message"
+                type="text"
+                maxlength="2000"
+                autocapitalize="sentences"
+                spellcheck="true"
+                disabled
+              />
+              <button
+                id="send-button"
+                class="sr-only"
+                type="submit"
+                tabindex="-1"
+                aria-hidden="true"
+                disabled
+              >
+                Invia
+              </button>
+            </form>
+          </div>
+        </section>
+        <div id="announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+        <p id="terminal-status" class="sr-only" role="status">Avvio del terminale…</p>
+
+        <p class="disclaimer">
+          Questa è una ricostruzione storica di ELIZA basata su regole. Non comprende realmente ciò
+          che scrivi e non sostituisce un professionista.
+        </p>
+        <section class="local-tools" aria-label="Informazioni e controlli locali">
+          <details class="tool-section">
+            <summary>Cos’è ELIZA?</summary>
+            <div class="tool-content">
+              <p
+                class="font-[family-name:var(--font-interface)] text-[12px] leading-[1.6] text-[color:var(--phosphor)] [overflow-wrap:anywhere]"
+              >
+                ELIZA è un programma di intelligenza artificiale simbolica creato da Joseph
+                Weizenbaum al MIT negli anni Sessanta e descritto nel 1966. Il copione DOCTOR
+                simulava un dialogo con uno psicoterapeuta: cercava parole chiave e riformulava
+                frasi in domande tramite regole, senza comprenderle. L’impressione di comprensione
+                suscitò interrogativi sul rapporto fra le persone e i computer. Questa versione è in
+                italiano, usa regole e non è un modello linguistico moderno.
+              </p>
+            </div>
+          </details>
+
+          <details class="tool-section">
+            <summary>Traccia locale</summary>
+            <div class="tool-content">
+              <label class="check-row" for="trace-toggle">
+                <input id="trace-toggle" type="checkbox" />
+                Mostra la traccia a ogni scambio
+              </label>
+              <p class="tool-note">
+                La traccia può contenere il testo digitato; resta in questa scheda e non viene
+                salvata automaticamente.
+              </p>
+              <details id="trace-details" class="trace-details">
+                <summary id="trace-summary">Nessuna traccia disponibile</summary>
+                <div id="trace-content" class="trace-content">
+                  <p class="tool-note">
+                    Attiva TRACE ON e invia un messaggio per ispezionare localmente le decisioni del
+                    motore.
+                  </p>
+                </div>
+              </details>
+            </div>
+          </details>
+
+          <details class="tool-section">
+            <summary>Impostazioni</summary>
+            <div class="tool-content settings-grid">
+              <div
+                class="session-line relative col-span-full flex min-w-0 flex-wrap"
+                role="group"
+                aria-label="Stato sessione"
+                aria-describedby="session-help"
+              >
+                <span>MODALITÀ <strong id="session-mode-label">STORICA</strong></span>
+                <span>SCAMBI <strong id="turn-count">0</strong></span>
+                <span>SEED <strong id="seed-value">0</strong></span>
+              </div>
+              <p id="session-help" class="tool-note session-help col-span-full">
+                La modalità storica sceglie le risposte a rotazione, come nell’ELIZA originale. Il
+                seed è un numero che permette di ripetere le scelte della modalità variata. Gli
+                scambi contano i messaggi inviati, non i comandi. Puoi conversare senza cambiare
+                queste impostazioni.
+              </p>
+
+              <label class="setting" for="mode-select">
+                <span>Modalità</span>
+                <select id="mode-select">
+                  <option value="HISTORICAL">Storica</option>
+                  <option value="DETERMINISTIC">Deterministica</option>
+                  <option value="VARIED">Variata</option>
+                </select>
+              </label>
+
+              <label class="setting" for="theme-select">
+                <span>Colore schermo</span>
+                <select id="theme-select">
+                  <option value="GREEN">Verde</option>
+                  <option value="AMBER">Ambra</option>
+                </select>
+              </label>
+
+              <label class="setting" for="text-size">
+                <span
+                  >Dimensione testo
+                  <output id="text-size-value" for="text-size">16 px</output></span
+                >
+                <input id="text-size" type="range" min="14" max="22" value="16" />
+              </label>
+
+              <label class="setting" for="speed-range">
+                <span
+                  >Velocità digitazione
+                  <output id="speed-value" for="speed-range">12 ms</output></span
+                >
+                <input id="speed-range" type="range" min="0" max="80" step="1" value="12" />
+              </label>
+
+              <label class="check-row" for="motion-toggle">
+                <input id="motion-toggle" type="checkbox" checked />
+                Animazioni discrete
+              </label>
+              <label class="check-row" for="typing-toggle">
+                <input id="typing-toggle" type="checkbox" checked />
+                Digitazione graduale
+              </label>
+              <label class="check-row" for="announce-toggle">
+                <input id="announce-toggle" type="checkbox" checked />
+                Annuncia le risposte agli screen reader
+              </label>
+
+              <div class="setting-actions">
+                <button id="fullscreen-button" class="quiet-button" type="button">
+                  Schermo intero
+                </button>
+                <button id="delete-session-button" class="quiet-button" type="button">
+                  Elimina sessione
+                </button>
+              </div>
+            </div>
+          </details>
+        </section>
+      </main>
+      <footer
+        class="mt-4 border-t border-[color:var(--line)] px-0.5 pt-3 font-[family-name:var(--font-interface)] text-[11px] leading-[1.5] text-[color:var(--quiet)] [overflow-wrap:anywhere]"
+      >
+        Un progetto web di
+        <a
+          href="https://e38.it"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-[color:var(--phosphor)] underline underline-offset-2 hover:text-[color:var(--phosphor-strong)]"
+          >e38 srl<span aria-hidden="true"> ↗</span
+          ><span class="sr-only"> (si apre in una nuova scheda)</span></a
+        >.
+      </footer>
+    </div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

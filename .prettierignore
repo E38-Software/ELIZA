@@ -1,0 +1,12 @@
+node_modules/
+dist/
+coverage/
+playwright-report/
+test-results/
+.playwright-mcp/
+doc/
+scripts/
+src/eliza.html
+README.md
+docs/swarm-*.md
+docs/decision-log.md
