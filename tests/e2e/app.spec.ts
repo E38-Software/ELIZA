@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
 
 const disclaimer =
   'Questa è una ricostruzione storica di ELIZA basata su regole. Non comprende realmente ciò che scrivi e non sostituisce un professionista.';
@@ -37,19 +38,29 @@ test.describe('applicazione ELIZA locale', () => {
     await expect(assistantMessages(page).first()).toContainText('Ciao. Di cosa vorresti parlare?');
   });
 
-  test('spiega in modo discreto la storia e il funzionamento di ELIZA', async ({ page }) => {
+  test('apre la storia dal pulsante in alto, spiega il funzionamento e ripristina il focus', async ({
+    page,
+  }) => {
     await openApplication(page);
-    const about = page.getByText('Cos’è ELIZA?', { exact: true });
-    await expect(about).toBeVisible();
+    const about = page.getByRole('button', { name: /Storia e funzionamento/ });
+    const explanation = page.getByRole('dialog', { name: 'ELIZA: storia e funzionamento' });
+    await expect(explanation).not.toBeVisible();
+    await expect(about).toBeInViewport();
     await about.click();
 
-    const explanation = about.locator('..');
+    await expect(explanation).toBeVisible();
     await expect(explanation).toContainText('Joseph Weizenbaum');
     await expect(explanation).toContainText('MIT');
     await expect(explanation).toContainText('1966');
     await expect(explanation).toContainText('DOCTOR');
     await expect(explanation).toContainText(/regole/i);
-    await expect(explanation).not.toContainText(/reinterpretazione locale/i);
+    await expect(explanation).toContainText('effetto ELIZA');
+    await expect(explanation).toContainText('Mi sento triste');
+    await expect(explanation).toContainText('Variata');
+    await expect(page.getByRole('button', { name: 'Chiudi storia e funzionamento' })).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(explanation).not.toBeVisible();
+    await expect(about).toBeFocused();
   });
 
   test('mostra il logo e accredita e38 srl nell’intestazione e nel piè di pagina', async ({
@@ -80,23 +91,193 @@ test.describe('applicazione ELIZA locale', () => {
     await expect(assistantMessages(page).last()).toContainText('Da quanto tempo ti senti triste?');
   });
 
-  test('TRACE ON mostra i campi e TRACE OFF interrompe la nuova traccia', async ({ page }) => {
+  test('raccoglie sempre la traccia; TRACE ON/OFF controllano solo la finestra', async ({
+    page,
+  }) => {
     await openApplication(page);
-    await submit(page, 'TRACE ON');
-    await page.getByText('Traccia locale', { exact: true }).click();
-    await expect(page.getByRole('checkbox', { name: /Mostra la traccia/ })).toBeChecked();
-
+    const panel = page.getByRole('dialog', { name: 'Il percorso decisionale' });
+    await expect(panel).not.toBeVisible();
     await submit(page, 'Mi sento triste');
-    const traceSummary = page.getByText(/Scambio 1 · \d+ campi/);
-    const traceDetails = traceSummary.locator('..');
-    await expect(traceSummary).toBeVisible();
-    await expect(traceDetails).toContainText('originalInput');
-    await expect(traceDetails).toContainText('selectedKeyword');
+    await expect(panel).not.toBeVisible();
+    await page.getByRole('button', { name: /Esplora le decisioni/ }).click();
+    await expect(panel).toBeVisible();
+    await expect(page.locator('#trace-summary')).toHaveText('Scambio 1 · HISTORICAL');
+    await expect(panel).toContainText('mi-sento');
+    await expect(panel).toContainText('pattern: mi sento');
+    await expect(panel).toContainText('Le frasi già scritte vengono usate a turno');
+    await panel.getByText('Dati tecnici completi dell’ultimo scambio').click();
+    await expect(page.locator('#trace-content')).toContainText('originalInput');
+    await expect(page.locator('#trace-content')).toContainText('selectedKeyword');
 
     await submit(page, 'TRACE OFF');
-    await expect(page.getByRole('checkbox', { name: /Mostra la traccia/ })).not.toBeChecked();
+    await expect(panel).not.toBeVisible();
+    await submit(page, 'Mia madre mi ascolta');
+    await submit(page, 'TRACE ON');
+    await expect(panel).toBeVisible();
+    await expect(page.locator('#trace-summary')).toHaveText('Scambio 2 · HISTORICAL');
+    await expect(page.locator('#trace-content')).toContainText('Mia madre mi ascolta');
+    await submit(page, 'TRACE OFF');
+
+    const downloadPromise = page.waitForEvent('download');
+    await submit(page, 'EXPORT');
+    const download = await downloadPromise;
+    const path = await download.path();
+    if (!path) throw new Error('Esportazione non scaricata.');
+    const exported = await readFile(path, 'utf8');
+    expect(exported).toContain('Scambio 1');
+    expect(exported).toContain('Scambio 2');
+    expect(exported).toContain('selectedKeyword: it-mi-sento');
+  });
+
+  test('anima e riproduce il percorso reale senza bloccare la chat', async ({ page }) => {
+    await openApplication(page);
+    await submit(page, 'SPEED 0');
+    await page.getByRole('button', { name: /Esplora le decisioni/ }).click();
+    await submit(page, 'Mia madre mi ascolta');
+    const steps = page.locator('.decision-step');
+    await expect(steps).toHaveCount(6);
+    await expect(page.locator('.decision-step[data-state="active"]')).toHaveCount(1);
+    await expect(page.locator('.decision-step[data-state="pending"]')).not.toHaveCount(0);
+    await expect(page.locator('.trace-chips span').first()).toHaveCSS(
+      'animation-name',
+      'trace-item-in',
+    );
+    await expect(
+      page.getByRole('button', { name: 'Passaggio 2: Cerca una parola da cui partire' }),
+    ).toHaveAttribute('aria-current', 'step', { timeout: 5000 });
+    await page.getByRole('button', { name: 'Pausa', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Riprendi', exact: true })).toBeEnabled();
+    await expect(page.locator('#decision-tree')).toHaveAttribute('data-playback', 'paused');
+    await page.getByRole('button', { name: 'Passo successivo', exact: true }).click();
+    await expect(page.locator('#trace-progress')).toContainText('Passaggio 3 di 6');
+    await page.getByRole('button', { name: 'Passaggio 6: Ecco come nasce la risposta' }).click();
+    await page.getByRole('button', { name: 'Mostra tutto', exact: true }).click();
+    await expect(page.locator('#trace-progress')).toHaveText('Percorso completo');
+    await expect(steps.last()).toBeInViewport();
+    await expect(page.locator('[data-result="unvisited"]')).not.toHaveCount(0);
+    await expect(page.locator('[data-result="alternative"]')).not.toHaveCount(0);
+    await expect(page.locator('[data-result="selected"]')).not.toHaveCount(0);
+    await page.getByRole('button', { name: 'Rivedi animazione' }).click();
+    await expect(page.locator('.decision-step[data-state="active"]')).toHaveCount(1);
+    await submit(page, 'xyzzy');
+    await expect(page.locator('#trace-summary')).toHaveText('Scambio 2 · HISTORICAL');
+    await expect(page.locator('#decision-tree')).not.toContainText('it-famiglia');
+    await page.getByRole('button', { name: 'Chiudi il pannello decisionale' }).click();
+    await expect(page.getByRole('button', { name: /Esplora le decisioni/ })).toBeFocused();
+    await expect(page.locator('.decision-step[data-state="active"]')).toHaveCount(0);
+  });
+
+  test('spiega visivamente memoria vuota, nuovo ricordo e ricordo recuperato', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await openApplication(page);
     await submit(page, 'Mi sento triste');
-    await expect(page.getByText(/Scambio 1 ·/)).toBeVisible();
+    await page.getByRole('button', { name: /Esplora le decisioni/ }).click();
+    const memoryButton = page.getByRole('button', {
+      name: 'Passaggio 4: Riusa parole e piccoli ricordi',
+    });
+    await memoryButton.click();
+    const memory = page.locator('.decision-step').nth(3);
+    await expect(memory).toContainText('Non è un punteggio');
+    await expect(memory).toContainText('non tutta la conversazione');
+    await expect(memory.locator('.trace-comparison strong')).toHaveText([
+      'Nessun ricordo',
+      'Nessun ricordo',
+    ]);
+    await submit(page, 'La mia bicicletta è rossa');
+    await memoryButton.click();
+    await expect(memory.locator('.trace-comparison strong')).toHaveText([
+      'Nessun ricordo',
+      '1 ricordo',
+    ]);
+    await expect(memory).toContainText('Conservato per un turno futuro');
+    await submit(page, 'xyzzy');
+    await memoryButton.click();
+    await expect(memory.locator('.trace-comparison strong')).toHaveText([
+      '1 ricordo',
+      'Nessun ricordo',
+    ]);
+    await expect(memory).toContainText('Ripreso dalla memoria');
+    await expect(page.locator('.decision-step[data-state="active"]')).toHaveCSS(
+      'animation-name',
+      'none',
+    );
+  });
+
+  test('completa automaticamente le sei scene e MOTION OFF interrompe anche gli effetti', async ({
+    page,
+  }) => {
+    await openApplication(page);
+    await submit(page, 'SPEED 0');
+    await submit(page, 'Mi sento triste');
+    await page.getByRole('button', { name: /Esplora le decisioni/ }).click();
+    await expect(page.locator('#trace-progress')).toContainText('Passaggio 1 di 6');
+    await expect(page.locator('#trace-progress')).toHaveText('Percorso completo', {
+      timeout: 22_000,
+    });
+    await expect(page.locator('.decision-step[data-state="complete"]')).toHaveCount(6);
+    await expect(page.locator('.decision-step').last()).toBeInViewport();
+    await page.getByRole('button', { name: 'Rivedi animazione' }).click();
+    await expect(page.locator('.decision-step[data-state="active"]')).toHaveCount(1);
+    await submit(page, 'MOTION OFF');
+    await expect(page.locator('.decision-step[data-state="active"]')).toHaveCount(0);
+    await expect(page.locator('#decision-tree')).toHaveAttribute('data-playback', 'paused');
+    await expect(page.locator('.trace-chips span').first()).toHaveCSS('animation-name', 'none');
+  });
+
+  test('sposta il pannello con mouse e tastiera e lo mantiene nel viewport', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await openApplication(page);
+    await page.getByRole('button', { name: /Esplora le decisioni/ }).click();
+    const panel = page.locator('#trace-dialog');
+    const handle = page.locator('#trace-handle');
+    const before = await panel.boundingBox();
+    const grip = await handle.boundingBox();
+    if (!before || !grip) throw new Error('Pannello non visibile.');
+    await page.mouse.move(grip.x + 30, grip.y + 20);
+    await page.mouse.down();
+    await page.mouse.move(grip.x - 170, grip.y + 80, { steps: 8 });
+    await page.mouse.up();
+    const after = await panel.boundingBox();
+    if (!after) throw new Error('Pannello non visibile dopo il trascinamento.');
+    expect(after.x).toBeCloseTo(before.x - 200);
+    expect(after.y).toBeCloseTo(before.y + 60);
+    await handle.focus();
+    await handle.press('ArrowLeft');
+    const keyboard = await panel.boundingBox();
+    expect(keyboard?.x).toBeCloseTo(after.x - 20);
+    await page.setViewportSize({ width: 320, height: 600 });
+    await expect
+      .poll(async () => {
+        const bounds = await panel.boundingBox();
+        return bounds ? bounds.x + bounds.width : Infinity;
+      })
+      .toBeLessThanOrEqual(320);
+    const mobile = await panel.boundingBox();
+    if (!mobile) throw new Error('Pannello non visibile su mobile.');
+    expect(mobile.x).toBeGreaterThanOrEqual(0);
+    expect(mobile.y).toBeGreaterThanOrEqual(0);
+    expect(mobile.x + mobile.width).toBeLessThanOrEqual(320);
+    expect(mobile.y + mobile.height).toBeLessThanOrEqual(600);
+    await handle.press('Escape');
+    await expect(panel).not.toBeVisible();
+  });
+
+  test('con movimento ridotto mostra subito tutto e cancella le vecchie animazioni al reset', async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await openApplication(page);
+    await submit(page, 'Mi sento triste');
+    await page.getByRole('button', { name: /Esplora le decisioni/ }).click();
+    await expect(page.locator('.decision-step[data-state="complete"]')).toHaveCount(6);
+    await page.getByRole('button', { name: 'Rivedi animazione' }).click();
+    await expect(page.locator('.decision-step[data-state="active"]')).toHaveCount(0);
+    await submit(page, 'RESET');
+    await expect(page.locator('#decision-tree')).toBeEmpty();
+    await expect(page.locator('#trace-content')).toBeEmpty();
+    await expect(page.getByRole('button', { name: 'Rivedi animazione' })).toBeDisabled();
+    await submit(page, 'Mi sento triste');
+    await expect(page.locator('#trace-summary')).toHaveText('Scambio 1 · HISTORICAL');
   });
 
   test('sceglie fosfori verdi o ambra e offre motion e testo regolabili', async ({ page }) => {
@@ -216,7 +397,6 @@ test.describe('applicazione ELIZA locale', () => {
     const announcer = page.locator('#announcer');
 
     await submit(page, 'MODE DETERMINISTIC');
-    await submit(page, 'TRACE ON');
     await page.getByText('Impostazioni', { exact: true }).click();
     const deleteButton = page.getByRole('button', { name: 'Elimina sessione' });
     await submit(page, 'SPEED 80');
@@ -250,7 +430,7 @@ test.describe('applicazione ELIZA locale', () => {
   test('la risposta safety è mostrata senza una risposta del motore', async ({ page }) => {
     await openApplication(page);
     await submit(page, 'TRACE ON');
-    await page.getByText('Traccia locale', { exact: true }).click();
+    await submit(page, 'Mi sento triste');
     const previousAssistantCount = await assistantMessages(page).count();
 
     await submit(page, 'Voglio suicidarmi.');
@@ -259,6 +439,9 @@ test.describe('applicazione ELIZA locale', () => {
     await expect(conversation(page)).toContainText('Se sei in pericolo immediato');
     await expect(assistantMessages(page)).toHaveCount(previousAssistantCount);
     await expect(page.getByText('Nessuna traccia disponibile', { exact: true })).toBeVisible();
+    await expect(page.locator('#trace-progress')).toContainText('Il motore non è stato invocato');
+    await expect(page.locator('#decision-tree')).toBeEmpty();
+    await expect(page.locator('#trace-content')).toBeEmpty();
   });
 
   test('invio e focus del prompt sono utilizzabili da tastiera', async ({ page }) => {

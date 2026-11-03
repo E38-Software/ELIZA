@@ -1,8 +1,10 @@
 import { getSafetyOverride } from '../safety/SafetyOverride';
-import { createItalianEngine } from '../language/it';
+import { createItalianEngine, italianScript } from '../language/it';
 import type { EngineMode, TraceRecord } from '../core/types';
 import { parseUiCommand } from './commands';
 import type { UiCommand, UiMode, UiTheme } from './commands';
+import { connectDialog, makeDraggable } from './dialogs';
+import { createTracePanel } from './trace';
 
 interface TranscriptEntry {
   readonly role: 'user' | 'assistant' | 'system' | 'safety';
@@ -62,10 +64,12 @@ export function startApplication(): void {
   const modeLabel = element<HTMLParagraphElement>('session-mode-label');
   const turnCount = element<HTMLElement>('turn-count');
   const seedValue = element<HTMLElement>('seed-value');
-  const traceToggle = element<HTMLInputElement>('trace-toggle');
-  const traceDetails = element<HTMLDetailsElement>('trace-details');
-  const traceSummary = element<HTMLElement>('trace-summary');
-  const traceContent = element<HTMLDivElement>('trace-content');
+  const traceDialog = element<HTMLDialogElement>('trace-dialog');
+  const traceOpener = element<HTMLButtonElement>('trace-open');
+  const historyDialog = element<HTMLDialogElement>('history-dialog');
+  connectDialog(traceDialog, traceOpener, false);
+  connectDialog(historyDialog, element<HTMLButtonElement>('history-open'), true);
+  const keepTraceInBounds = makeDraggable(traceDialog, element<HTMLElement>('trace-handle'));
   const motionToggle = element<HTMLInputElement>('motion-toggle');
   const typingToggle = element<HTMLInputElement>('typing-toggle');
   const announceToggle = element<HTMLInputElement>('announce-toggle');
@@ -84,12 +88,25 @@ export function startApplication(): void {
   let announceEnabled = true;
   let typingSpeed = 12;
   let turn = 0;
-  let traceEnabled = false;
   let busy = true;
   let engine = createItalianEngine({ mode: engineMode(mode), seed });
   const transcript: TranscriptEntry[] = [];
   const traces: StoredTrace[] = [];
-  let lastTrace: TraceRecord | null = null;
+  const tracePanel = createTracePanel(
+    traceDialog,
+    italianScript,
+    () => motionEnabled && !window.matchMedia(REDUCED_MOTION_QUERY).matches,
+  );
+  traceOpener.addEventListener('click', () => {
+    keepTraceInBounds();
+    tracePanel.play();
+  });
+  window.matchMedia(REDUCED_MOTION_QUERY).addEventListener('change', (event) => {
+    if (event.matches) {
+      motionEnabled = false;
+      syncControls();
+    }
+  });
 
   function setStatus(message: string): void {
     status.textContent = message;
@@ -166,34 +183,6 @@ export function startApplication(): void {
     if (announceEnabled) announcer.textContent = message;
   }
 
-  function renderTrace(record: TraceRecord, recordNumber: number): void {
-    const fields = Object.entries(record as unknown as Record<string, unknown>);
-    traceContent.replaceChildren();
-    traceSummary.textContent = `Scambio ${recordNumber} · ${fields.length} campi`;
-
-    if (fields.length === 0) {
-      const empty = document.createElement('p');
-      empty.className = 'trace-empty';
-      empty.textContent = 'Il motore non ha fornito campi di traccia per questo scambio.';
-      traceContent.append(empty);
-      return;
-    }
-
-    const list = document.createElement('dl');
-    list.className = 'trace-fields';
-    for (const [name, value] of fields) {
-      const row = document.createElement('div');
-      row.className = 'trace-field';
-      const term = document.createElement('dt');
-      term.textContent = name;
-      const detail = document.createElement('dd');
-      detail.textContent = stringifyTraceValue(value);
-      row.append(term, detail);
-      list.append(row);
-    }
-    traceContent.append(list);
-  }
-
   function syncControls(): void {
     document.body.dataset.motion = motionEnabled ? 'on' : 'off';
     document.body.dataset.theme = theme.toLowerCase();
@@ -208,17 +197,15 @@ export function startApplication(): void {
     motionToggle.checked = motionEnabled;
     typingToggle.checked = typingEnabled;
     announceToggle.checked = announceEnabled;
-    traceToggle.checked = traceEnabled;
+    if (!motionEnabled) tracePanel.finish();
     speedRange.value = String(typingSpeed);
     speedValue.value = `${typingSpeed} ms`;
     textSizeValue.value = `${textSizeRange.value} px`;
   }
 
   function addTrace(record: TraceRecord): void {
-    lastTrace = record;
     traces.push({ turn, record });
-    renderTrace(record, turn);
-    if (traceEnabled) traceDetails.open = true;
+    tracePanel.show(record, turn);
   }
 
   function exportSession(): void {
@@ -267,19 +254,10 @@ export function startApplication(): void {
     transcript.length = 0;
     traces.length = 0;
     turn = 0;
-    traceEnabled = false;
-    lastTrace = null;
     mode = 'HISTORICAL';
     seed = DEFAULT_SEED;
     engine = createItalianEngine({ mode: engineMode(mode), seed });
-    traceDetails.open = false;
-    traceContent.replaceChildren();
-    const empty = document.createElement('p');
-    empty.className = 'trace-empty';
-    empty.textContent =
-      'Attiva TRACE ON e invia un messaggio per ispezionare localmente le decisioni del motore.';
-    traceContent.append(empty);
-    traceSummary.textContent = 'Nessuna traccia disponibile';
+    tracePanel.clear();
     syncControls();
     conversation.replaceChildren();
     announcer.textContent = '';
@@ -299,6 +277,7 @@ export function startApplication(): void {
         );
         return;
       case 'about':
+        element<HTMLButtonElement>('history-open').click();
         await appendMessage(
           'system',
           'ELIZA è un esperimento storico basato su regole. Questa interfaccia richiama visivamente il PDP-9, ma non è filologica. La conversazione resta in memoria volatile in questa scheda; niente viene inviato o salvato automaticamente.',
@@ -311,11 +290,8 @@ export function startApplication(): void {
       case 'reset':
         engine.reset();
         turn = 0;
-        lastTrace = null;
         traces.length = 0;
-        traceDetails.open = false;
-        traceContent.replaceChildren();
-        traceSummary.textContent = 'Nessuna traccia disponibile';
+        tracePanel.clear();
         syncControls();
         setStatus('Stato del motore azzerato; modalità e seed invariati.');
         await appendMessage(
@@ -324,24 +300,19 @@ export function startApplication(): void {
         );
         return;
       case 'trace':
-        traceEnabled = command.enabled;
-        if (!traceEnabled) traceDetails.open = false;
-        else if (lastTrace) traceDetails.open = true;
-        syncControls();
+        if (command.enabled) traceOpener.click();
+        else traceDialog.close();
         await appendMessage(
           'system',
-          `Traccia automatica ${traceEnabled ? 'attivata' : 'disattivata'}.`,
+          `Pannello della traccia ${command.enabled ? 'aperto' : 'chiuso'}. La raccolta locale resta sempre attiva.`,
         );
         return;
       case 'mode':
         mode = command.mode;
         engine.setMode(engineMode(mode));
         turn = 0;
-        lastTrace = null;
         traces.length = 0;
-        traceDetails.open = false;
-        traceContent.replaceChildren();
-        traceSummary.textContent = 'Nessuna traccia disponibile';
+        tracePanel.clear();
         syncControls();
         await appendMessage(
           'system',
@@ -352,11 +323,8 @@ export function startApplication(): void {
         seed = command.seed;
         engine.setSeed(seed);
         turn = 0;
-        lastTrace = null;
         traces.length = 0;
-        traceDetails.open = false;
-        traceContent.replaceChildren();
-        traceSummary.textContent = 'Nessuna traccia disponibile';
+        tracePanel.clear();
         syncControls();
         await appendMessage('system', `Seed ${seed} applicato. Stato del motore reimpostato.`);
         return;
@@ -398,15 +366,16 @@ export function startApplication(): void {
     turnCount.textContent = String(turn);
     const safetyMatch = getSafetyOverride(text);
     if (safetyMatch) {
-      lastTrace = null;
-      traceDetails.open = false;
+      tracePanel.clear(
+        `Scambio ${turn} · Avviso di sicurezza locale (${safetyMatch.ruleId}). Il motore non è stato invocato: nessuna parola chiave o regola conversazionale valutata.`,
+      );
       setStatus(`Percorso safety locale attivato (${safetyMatch.ruleId}); motore non invocato.`);
       await appendMessage('safety', safetyMatch.message, true);
       return;
     }
 
     const result = engine.respond(text);
-    if (traceEnabled) addTrace(result.trace);
+    addTrace(result.trace);
     setStatus('Risposta generata dal motore locale a regole.');
     await appendMessage('assistant', result.response, true);
   }
@@ -437,9 +406,6 @@ export function startApplication(): void {
     syncControls();
   });
 
-  traceToggle.addEventListener('change', () => {
-    void executeCommand({ type: 'trace', enabled: traceToggle.checked });
-  });
   motionToggle.addEventListener('change', () => {
     void executeCommand({ type: 'motion', enabled: motionToggle.checked });
   });

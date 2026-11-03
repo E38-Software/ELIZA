@@ -24,6 +24,42 @@ tracce. Cronologia e stato restano nella memoria volatile della scheda e si perd
 chiudendola o ricaricando la pagina. `EXPORT` scarica su richiesta la cronologia e le
 tracce; `DELETE SESSION`, dopo conferma, elimina i dati della sessione corrente.
 
+### Il percorso decisionale, a vista
+
+Il pulsante **Esplora le decisioni**, in alto, apre una finestra non bloccante:
+puoi continuare a conversare e trascinarne l’intestazione per affiancarla alla chat.
+Da tastiera, porta il focus sull’intestazione e usa le frecce per spostarla; `Esc`
+o **Chiudi** la nascondono. All’avvio è chiusa, anche su desktop.
+
+La raccolta della traccia è **sempre attiva**, anche a finestra chiusa. Il pannello
+mostra l’ultimo scambio: testo normalizzato, candidati e priorità, albero dei pattern
+provati con esito e frammenti catturati, riflessioni grammaticali, memoria e alternative
+di ricomposizione. Distingue i rami verificati, esclusi e non visitati dalle risposte
+alternative non scelte. Il metodo di selezione indica rotazione, seed ed estrazioni,
+contatore ciclico o richiamo della memoria, secondo il percorso effettivo.
+
+La vista guidata racconta sei passaggi in linguaggio comune, uno alla volta: mostra
+le parole come tessere, fa comparire progressivamente le verifiche e confronta la
+frase da completare con la risposta ottenuta. **Pausa**, **Riprendi**,
+**Passo successivo** e i sei pulsanti di navigazione permettono di leggere al proprio
+ritmo; **Mostra tutto** apre l’intero percorso. Ogni scena dura tre secondi nel replay.
+
+La memoria ha due riquadri espliciti, **Prima di questo messaggio** e **Dopo questo
+messaggio**. «Nessun ricordo» in entrambi significa che non è stato conservato né
+recuperato un frammento, non un punteggio. Il pannello spiega anche la creazione e il
+richiamo dei ricordi: sono frasi preparate da alcune regole, non l’intera cronologia.
+
+L’animazione e **Rivedi animazione** ripercorrono dati già registrati: non rappresentano
+tempi di calcolo reali o ragionamenti di un modello. Le preferenze di movimento ridotto
+e `MOTION OFF` mostrano subito il percorso completo. I dettagli tecnici sono separati
+dalle spiegazioni e rimangono espandibili. Un avviso di sicurezza è segnalato come
+percorso separato, senza attribuirgli regole del motore non eseguite.
+
+Le tracce degli scambi precedenti rimangono esportabili con `EXPORT`; reset,
+cambio di modalità o seed le azzerano come lo stato del motore. Chiudere la finestra
+non le cancella. **Storia e funzionamento**, sempre in alto, apre invece una modale
+con il contesto storico, un esempio illustrato e una spiegazione delle tre modalità.
+
 L’app non include un service worker né storage offline persistente e non è una PWA
 offline. Dopo che la pagina e gli asset sono stati caricati, l’app può continuare a
 funzionare nella scheda senza rete. Dopo la chiusura del browser, invece, un’apertura a
@@ -59,7 +95,7 @@ I comandi sono locali; `*` può essere usato come prefisso facoltativo.
 | `HELP`, `ABOUT` | Mostra aiuto e informazioni sull’esperimento. |
 | `MODE HISTORICAL`, `MODE DETERMINISTIC`, `MODE VARIED` | Cambia modalità e azzera lo stato del motore. |
 | `SEED <0–4294967295>` | Imposta il seed a 32 bit e azzera lo stato del motore; la variazione si applica in modalità `VARIED`. |
-| `TRACE ON`, `TRACE OFF` | Attiva o disattiva la traccia locale delle regole. Può includere parti dell’input. |
+| `TRACE ON`, `TRACE OFF` | Apre o chiude il pannello decisionale. La raccolta locale delle tracce resta sempre attiva e può includere parti dell’input. |
 | `CLEAR` | Pulisce la vista, ma conserva cronologia e stato in memoria. |
 | `RESET` | Azzera stato del motore e tracce; conserva cronologia visibile, modalità e seed. |
 | `DELETE SESSION` | Dopo conferma elimina cronologia e tracce e prepara una nuova sessione volatile. |

@@ -40,6 +40,31 @@
         </div>
       </header>
 
+      <nav class="experience-actions" aria-label="Esplora ELIZA">
+        <button
+          id="history-open"
+          class="feature-button"
+          type="button"
+          aria-haspopup="dialog"
+          aria-controls="history-dialog"
+          aria-expanded="false"
+        >
+          <span aria-hidden="true">1966 → OGGI</span>
+          Storia e funzionamento
+        </button>
+        <button
+          id="trace-open"
+          class="feature-button"
+          type="button"
+          aria-haspopup="dialog"
+          aria-controls="trace-dialog"
+          aria-expanded="false"
+        >
+          <span><i class="recording-dot" aria-hidden="true"></i> TRACE SEMPRE ATTIVO</span>
+          Esplora le decisioni
+        </button>
+      </nav>
+
       <main aria-labelledby="terminal-title">
         <section class="terminal-window" data-motion="on" aria-label="Terminale ELIZA">
           <div
@@ -97,45 +122,6 @@
           che scrivi e non sostituisce un professionista.
         </p>
         <section class="local-tools" aria-label="Informazioni e controlli locali">
-          <details class="tool-section">
-            <summary>Cos’è ELIZA?</summary>
-            <div class="tool-content">
-              <p
-                class="font-[family-name:var(--font-interface)] text-[12px] leading-[1.6] text-[color:var(--phosphor)] [overflow-wrap:anywhere]"
-              >
-                ELIZA è un programma di intelligenza artificiale simbolica creato da Joseph
-                Weizenbaum al MIT negli anni Sessanta e descritto nel 1966. Il copione DOCTOR
-                simulava un dialogo con uno psicoterapeuta: cercava parole chiave e riformulava
-                frasi in domande tramite regole, senza comprenderle. L’impressione di comprensione
-                suscitò interrogativi sul rapporto fra le persone e i computer. Questa versione è in
-                italiano, usa regole e non è un modello linguistico moderno.
-              </p>
-            </div>
-          </details>
-
-          <details class="tool-section">
-            <summary>Traccia locale</summary>
-            <div class="tool-content">
-              <label class="check-row" for="trace-toggle">
-                <input id="trace-toggle" type="checkbox" />
-                Mostra la traccia a ogni scambio
-              </label>
-              <p class="tool-note">
-                La traccia può contenere il testo digitato; resta in questa scheda e non viene
-                salvata automaticamente.
-              </p>
-              <details id="trace-details" class="trace-details">
-                <summary id="trace-summary">Nessuna traccia disponibile</summary>
-                <div id="trace-content" class="trace-content">
-                  <p class="tool-note">
-                    Attiva TRACE ON e invia un messaggio per ispezionare localmente le decisioni del
-                    motore.
-                  </p>
-                </div>
-              </details>
-            </div>
-          </details>
-
           <details class="tool-section">
             <summary>Impostazioni</summary>
             <div class="tool-content settings-grid">
@@ -228,6 +214,194 @@
         >.
       </footer>
     </div>
+    <dialog
+      id="trace-dialog"
+      class="inspector-dialog"
+      aria-labelledby="trace-title"
+      aria-describedby="trace-description"
+      aria-modal="false"
+      tabindex="-1"
+    >
+      <header
+        id="trace-handle"
+        class="dialog-header drag-handle"
+        tabindex="0"
+        aria-label="Sposta il pannello con le frecce o trascinando"
+      >
+        <div>
+          <p class="dialog-eyebrow">DALLE TUE PAROLE ALLA RISPOSTA</p>
+          <h2 id="trace-title">Il percorso decisionale</h2>
+        </div>
+        <button
+          class="quiet-button"
+          type="button"
+          data-close
+          aria-label="Chiudi il pannello decisionale"
+        >
+          Chiudi ×
+        </button>
+      </header>
+      <div class="trace-controls">
+        <div class="trace-toolbar">
+          <strong id="trace-summary">Nessuna traccia disponibile</strong>
+          <button id="trace-replay" class="quiet-button" type="button" disabled>
+            Rivedi animazione
+          </button>
+        </div>
+        <nav
+          id="trace-navigation"
+          class="trace-navigation"
+          aria-label="Esplora i passaggi della risposta"
+        ></nav>
+        <div class="trace-playback">
+          <button id="trace-pause" class="quiet-button" type="button" disabled>Pausa</button>
+          <button id="trace-next" class="quiet-button" type="button" disabled>
+            Passo successivo
+          </button>
+          <button id="trace-all" class="quiet-button" type="button" disabled>Mostra tutto</button>
+        </div>
+        <p id="trace-progress" class="tool-note" role="status"></p>
+      </div>
+      <div class="dialog-body">
+        <p id="trace-description" class="tool-note">
+          Segui come le tue parole diventano una risposta. Le scene ripercorrono regole già
+          eseguite: l’animazione non è il tempo di calcolo. Usa Pausa per leggere con calma o scegli
+          un passaggio. Puoi trascinare questa finestra dall’intestazione.
+        </p>
+        <ol id="decision-tree" class="decision-tree" aria-label="Percorso delle regole"></ol>
+        <details class="trace-details">
+          <summary>Dati tecnici completi dell’ultimo scambio</summary>
+          <div id="trace-content" class="trace-content"></div>
+        </details>
+        <p class="tool-note">
+          La traccia può contenere il testo digitato. Resta nella memoria di questa scheda; EXPORT
+          la scarica solo su richiesta.
+        </p>
+      </div>
+    </dialog>
+
+    <dialog id="history-dialog" class="history-dialog" aria-labelledby="history-title">
+      <header class="dialog-header">
+        <div>
+          <p class="dialog-eyebrow">CONTESTO / GUIDA</p>
+          <h2 id="history-title">ELIZA: storia e funzionamento</h2>
+        </div>
+        <button
+          class="quiet-button"
+          type="button"
+          data-close
+          autofocus
+          aria-label="Chiudi storia e funzionamento"
+        >
+          Chiudi ×
+        </button>
+      </header>
+      <div class="dialog-body history-body">
+        <p class="history-lead">
+          Una macchina può sembrare in ascolto senza comprendere una sola parola.
+        </p>
+        <section aria-labelledby="history-origins">
+          <h3 id="history-origins">01 / MIT, anni Sessanta</h3>
+          <p>
+            Joseph Weizenbaum sviluppò ELIZA al MIT e ne descrisse il funzionamento nel 1966. Era un
+            programma capace di trasformare il testo con regole esplicite. Un copione separato
+            stabiliva quali parole cercare e come costruire le risposte.
+          </p>
+        </section>
+        <section aria-labelledby="history-doctor">
+          <h3 id="history-doctor">02 / Il copione DOCTOR e l’effetto ELIZA</h3>
+          <p>
+            DOCTOR richiamava lo stile di un colloquio rogeriano: riprendeva le parole
+            dell’interlocutore e le trasformava in domande. Non faceva diagnosi e non comprendeva il
+            contenuto. La tendenza umana ad attribuire comprensione a questi scambi è spesso
+            chiamata «effetto ELIZA»: una risposta plausibile non dimostra che qualcuno ci capisca.
+          </p>
+        </section>
+        <section aria-labelledby="history-mechanics">
+          <h3 id="history-mechanics">03 / Dentro una risposta</h3>
+          <ol class="explanation-flow">
+            <li>
+              <strong>Testo</strong
+              ><span>«Mi sento triste» viene normalizzato e diviso in token.</span>
+            </li>
+            <li>
+              <strong>Parola chiave</strong
+              ><span
+                >Il motore cerca espressioni previste dal copione e prepara una coda secondo le
+                priorità.</span
+              >
+            </li>
+            <li>
+              <strong>Regola</strong
+              ><span
+                >Un pattern riconosce «mi sento …» e cattura il frammento «triste». I pattern che
+                non corrispondono vengono scartati.</span
+              >
+            </li>
+            <li>
+              <strong>Ricomposizione</strong
+              ><span
+                >Un modello di risposta incorpora il frammento: per esempio, «Da quanto tempo ti
+                senti triste?».</span
+              >
+            </li>
+          </ol>
+          <p>
+            Alcune regole cambiano pronomi o verbi, rinviano ad altre chiavi o memorizzano un
+            frammento da richiamare più tardi. Se non trovano corrispondenze, il programma usa una
+            risposta generica: non inventa un’interpretazione nascosta.
+          </p>
+        </section>
+        <section aria-labelledby="history-modes">
+          <h3 id="history-modes">04 / Tre modi di scegliere, nessun LLM</h3>
+          <dl class="history-modes">
+            <dt>Storica</dt>
+            <dd>Ruota le risposte e usa un hash Hollerith per le scelte di memoria.</dd>
+            <dt>Deterministica</dt>
+            <dd>
+              Usa la stessa rotazione e lo stesso hash, ma gestisce anche i messaggi consecutivi
+              ripetuti.
+            </dd>
+            <dt>Variata</dt>
+            <dd>
+              Sceglie fra alternative scritte con un generatore pseudo-casuale. Lo stesso seed e gli
+              stessi input riproducono le scelte.
+            </dd>
+          </dl>
+        </section>
+        <section aria-labelledby="history-today">
+          <h3 id="history-today">05 / Questo esperimento</h3>
+          <p>
+            È una rielaborazione italiana locale, non una traduzione del DOCTOR originale né una
+            riproduzione storicamente equivalente. Anche l’estetica del terminale è un richiamo, non
+            una ricostruzione filologica.
+          </p>
+          <p>
+            Apri «Esplora le decisioni», invia una frase e osserva i rami verificati, esclusi o non
+            visitati. Il replay anima una traccia già prodotta dal motore: non misura tempi di
+            calcolo e non mostra pensieri o coscienza.
+          </p>
+          <p>
+            Tutto avviene nel browser, senza LLM, API o salvataggio automatico. Ricaricare la pagina
+            perde la sessione. ELIZA non è una terapeuta e non sostituisce un professionista. Un
+            avviso locale di sicurezza può interrompere il percorso normale; è un controllo
+            limitato, non una valutazione clinica.
+          </p>
+        </section>
+        <p class="history-source">
+          Fonte primaria:
+          <a
+            href="https://web.stanford.edu/class/linguist238/p36-weizenabaum.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Joseph Weizenbaum, articolo del 1966<span class="sr-only">
+              (si apre in una nuova scheda)</span
+            >
+            ↗</a
+          >.
+        </p>
+      </div>
+    </dialog>
     <script type="module" src="./src/main.ts"></script>
   </body>
 </html>

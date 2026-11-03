@@ -216,12 +216,439 @@ body[data-theme='amber'] {
   @apply col-span-full flex min-w-0 flex-wrap items-center gap-2 border-t border-[color:var(--separator)] pt-[5px] max-[480px]:col-auto;
 }
 
+.experience-actions {
+  @apply mt-5 grid grid-cols-2 gap-3 max-[480px]:grid-cols-1;
+}
+
+.feature-button {
+  @apply grid min-w-0 gap-2 border border-[color:var(--line)] bg-[color:var(--terminal)] px-4 py-3 text-left font-[family-name:var(--font-interface)] text-sm font-medium text-[color:var(--phosphor)] [overflow-wrap:anywhere] hover:border-[color:var(--phosphor-strong)];
+}
+
+.feature-button > span {
+  @apply flex items-center gap-2 font-[family-name:var(--font-terminal)] text-[9px] tracking-wider text-[color:var(--quiet)];
+}
+
+.recording-dot {
+  @apply inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--phosphor-strong)];
+  box-shadow: 0 0 8px var(--phosphor-strong);
+}
+
+.inspector-dialog,
+.history-dialog {
+  @apply border border-[color:var(--line)] bg-[color:var(--terminal)] p-0 text-[color:var(--phosphor)] shadow-2xl;
+  width: min(620px, calc(100vw - 24px));
+  max-width: calc(100vw - 24px);
+  max-height: calc(100dvh - 24px);
+  overflow: hidden;
+}
+
+.inspector-dialog {
+  position: fixed;
+  inset: 88px 24px auto auto;
+  margin: 0;
+  z-index: 20;
+  max-height: calc(100dvh - 100px);
+}
+
+.inspector-dialog[open],
+.history-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.history-dialog {
+  width: min(740px, calc(100vw - 24px));
+}
+
+.history-dialog::backdrop {
+  background: rgb(0 0 0 / 75%);
+  backdrop-filter: blur(4px);
+}
+
+.dialog-header {
+  @apply flex shrink-0 items-center justify-between gap-3 border-b border-[color:var(--line)] px-5 py-4 max-[480px]:px-3;
+}
+
+.dialog-header > div {
+  min-width: 0;
+}
+
+.dialog-header h2 {
+  @apply m-0 font-[family-name:var(--font-interface)] text-base font-semibold [overflow-wrap:anywhere];
+}
+
+.dialog-header button {
+  flex-shrink: 0;
+}
+
+.dialog-eyebrow {
+  @apply mb-1 text-[9px] tracking-wider text-[color:var(--quiet)] [overflow-wrap:anywhere];
+}
+
+.drag-handle {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.dialog-body {
+  @apply min-h-0 overflow-y-auto overscroll-contain px-5 py-4 max-[480px]:px-3;
+  scrollbar-color: var(--line) var(--terminal);
+  overflow-wrap: anywhere;
+}
+
+.trace-toolbar {
+  @apply flex flex-wrap items-center justify-between gap-2 text-[11px];
+}
+
+.trace-controls {
+  @apply shrink-0 border-b border-[color:var(--line)] px-5 pt-3 max-[480px]:px-3;
+}
+
+.decision-tree {
+  @apply my-4 ml-2 list-none border-l border-[color:var(--line)] p-0;
+}
+
+.decision-step {
+  @apply relative mb-4 ml-5 border border-[color:var(--line)] p-3;
+  transition:
+    opacity 250ms ease,
+    border-color 250ms ease,
+    background-color 250ms ease;
+}
+
+.decision-step::before {
+  content: '';
+  position: absolute;
+  left: -26px;
+  top: 17px;
+  width: 9px;
+  height: 9px;
+  border: 1px solid var(--phosphor-strong);
+  border-radius: 50%;
+  background: var(--terminal);
+}
+
+.decision-step::after {
+  content: '';
+  position: absolute;
+  left: -20px;
+  top: 21px;
+  width: 19px;
+  height: 1px;
+  background: var(--line);
+}
+
+.decision-step h3 {
+  @apply m-0 font-[family-name:var(--font-interface)] text-base font-semibold text-[color:var(--phosphor-strong)];
+}
+
+.decision-step p {
+  @apply mb-0 mt-3 whitespace-pre-wrap font-[family-name:var(--font-interface)] text-[13px] leading-[1.7];
+}
+
+.decision-step[data-state='pending'] {
+  opacity: 0.4;
+}
+
+.decision-step[data-state='active'] {
+  border-color: var(--phosphor-strong);
+  background: var(--screen);
+}
+
+.decision-step[data-state='active']::before {
+  background: var(--phosphor-strong);
+  animation: trace-pulse 650ms ease-in-out infinite alternate;
+}
+
+.decision-step[data-state='complete']::before {
+  background: var(--phosphor-strong);
+}
+
+.decision-branches {
+  @apply mb-0 mt-3 ml-1 list-none border-l border-[color:var(--line)] pl-3;
+}
+
+.decision-branches li {
+  @apply relative mt-3 font-[family-name:var(--font-interface)] text-[13px] leading-relaxed;
+}
+
+.decision-branches li::before {
+  content: '';
+  position: absolute;
+  left: -13px;
+  top: 9px;
+  width: 9px;
+  border-top: 1px solid var(--line);
+}
+
+.decision-badge {
+  @apply mr-2 inline-block border border-[color:var(--line)] px-1.5 py-0.5 text-[10px] font-semibold;
+}
+
+.trace-navigation {
+  @apply my-3 grid grid-cols-6 gap-1 max-[480px]:grid-cols-3;
+}
+
+.trace-navigation button {
+  @apply relative min-w-0 overflow-hidden border border-[color:var(--line)] px-1 py-2 font-[family-name:var(--font-interface)] text-[11px] [overflow-wrap:anywhere];
+}
+
+.trace-navigation button[data-state='active'] {
+  @apply border-[color:var(--phosphor-strong)] bg-[color:var(--line)] font-bold;
+}
+
+.trace-navigation button[data-state='complete'] {
+  @apply border-b-2 border-b-[color:var(--phosphor-strong)];
+}
+
+.trace-playback {
+  @apply flex flex-wrap gap-2;
+}
+
+.quiet-button:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.decision-tree[data-view='scene'] .decision-step:not([data-state='active']) {
+  display: none;
+}
+
+.decision-tree[data-view='scene'] {
+  margin-left: 0;
+  border-left: none;
+}
+
+.decision-tree[data-view='scene'] .decision-step {
+  margin-left: 0;
+  padding: 18px;
+}
+
+.decision-tree[data-view='scene'] .decision-step::before,
+.decision-tree[data-view='scene'] .decision-step::after {
+  display: none;
+}
+
+.trace-comparison {
+  @apply my-4 grid grid-cols-2 gap-3 max-[480px]:grid-cols-1;
+}
+
+.trace-comparison > div {
+  @apply relative min-w-0 border border-[color:var(--line)] bg-[color:var(--screen)] p-3;
+}
+
+.trace-comparison > div + div::before {
+  content: '→';
+  position: absolute;
+  left: -16px;
+  top: 35%;
+  color: var(--phosphor-strong);
+}
+
+.trace-comparison span {
+  @apply mb-2 block font-[family-name:var(--font-interface)] text-[11px] text-[color:var(--quiet)];
+}
+
+.trace-comparison strong {
+  @apply block font-[family-name:var(--font-interface)] text-[16px] font-medium;
+}
+
+.trace-chips {
+  @apply my-4 flex flex-wrap gap-2;
+}
+
+.trace-chips span {
+  @apply inline-block max-w-full border border-[color:var(--phosphor-strong)] bg-[color:var(--screen)] px-3 py-1 text-[14px] [overflow-wrap:anywhere];
+}
+
+.decision-check {
+  @apply mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full border border-[color:var(--line)] text-base font-bold;
+}
+
+[data-result='selected'] .decision-check,
+[data-result='matched'] .decision-check {
+  @apply border-[color:var(--phosphor-strong)] text-[color:var(--phosphor-strong)];
+}
+
+.decision-step .step-explanation {
+  @apply mt-4 border-l-2 border-[color:var(--phosphor-strong)] bg-[color:var(--screen)] p-3 text-[12px];
+}
+
+.step-technical {
+  @apply mt-4 text-[11px] text-[color:var(--quiet)];
+}
+
+.step-technical summary {
+  cursor: pointer;
+}
+
+.step-technical pre {
+  @apply mt-2 whitespace-pre-wrap text-[10px] leading-relaxed [overflow-wrap:anywhere];
+}
+
+.decision-tree[data-playback='running'] .decision-step[data-state='active'] {
+  animation: trace-scene-in 450ms ease-out both;
+}
+
+.decision-tree[data-playback='running'] .decision-step[data-state='active'] .trace-chips span,
+.decision-tree[data-playback='running'] .decision-step[data-state='active'] .decision-branches li {
+  animation: trace-item-in 450ms ease-out both;
+  animation-delay: calc(250ms + var(--item-index, 0) * 160ms);
+}
+
+.decision-tree[data-playback='running'] .decision-step[data-state='active'] .decision-check {
+  animation: trace-check-in 400ms ease-out both;
+  animation-delay: calc(500ms + var(--item-index, 0) * 160ms);
+}
+
+.decision-tree[data-playback='running']
+  .decision-step[data-state='active']
+  .trace-comparison
+  > div
+  + div {
+  animation: trace-item-in 700ms ease-out 650ms both;
+}
+
+.decision-tree[data-playback='paused'] .decision-step::before {
+  animation: none;
+}
+
+@keyframes trace-scene-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes trace-item-in {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes trace-check-in {
+  from {
+    opacity: 0;
+    transform: scale(0.3) rotate(-35deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+
+[data-result='selected'] .decision-badge,
+[data-result='matched'] .decision-badge {
+  border-color: var(--phosphor-strong);
+  color: var(--phosphor-strong);
+}
+
+[data-result='rejected'] .decision-badge {
+  border-style: dashed;
+}
+
+[data-result='unvisited'] {
+  color: var(--quiet);
+}
+
+.history-body {
+  @apply font-[family-name:var(--font-interface)] text-sm leading-[1.8];
+}
+
+.history-lead {
+  @apply mb-7 mt-0 border-l-2 border-[color:var(--phosphor-strong)] pl-4 text-xl;
+}
+
+.history-body section {
+  @apply mb-7;
+}
+
+.history-body h3 {
+  @apply font-[family-name:var(--font-terminal)] text-xs text-[color:var(--phosphor-strong)];
+}
+
+.explanation-flow {
+  @apply grid list-none gap-2 p-0;
+}
+
+.explanation-flow li {
+  @apply grid gap-1 border border-[color:var(--line)] px-3 py-2;
+}
+
+.explanation-flow strong {
+  @apply text-[color:var(--phosphor-strong)];
+}
+
+.history-modes dt {
+  @apply mt-3 font-semibold;
+}
+
+.history-modes dd {
+  @apply ml-0 text-[color:var(--quiet)];
+}
+
+.history-source {
+  @apply border-t border-[color:var(--line)] pt-3 text-xs;
+}
+
+.history-source a {
+  @apply underline underline-offset-2;
+}
+
+body[data-motion='off'] .decision-step,
+body[data-motion='off'] .decision-step::before,
+body[data-motion='off'] .decision-step * {
+  animation: none !important;
+  transition: none !important;
+}
+
+@keyframes trace-pulse {
+  from {
+    box-shadow: 0 0 0 0 transparent;
+  }
+  to {
+    box-shadow: 0 0 0 5px var(--line);
+  }
+}
+
+@media (max-width: 480px) {
+  .inspector-dialog {
+    inset: 12px 12px auto auto;
+    max-height: calc(100dvh - 24px);
+  }
+
+  .dialog-header {
+    flex-wrap: wrap;
+  }
+
+  .trace-comparison > div + div::before {
+    content: '↓';
+    left: 50%;
+    top: -19px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     scroll-behavior: auto !important;
     animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
