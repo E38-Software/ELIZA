@@ -10,6 +10,15 @@ interface VerbFormSet {
 const VERB_FORM_SETS: readonly VerbFormSet[] = [
   { lemma: 'essere', tense: 'present', singular: ['sono', 'sei'], plural: ['siamo', 'siete'] },
   { lemma: 'avere', tense: 'present', singular: ['ho', 'hai'], plural: ['abbiamo', 'avete'] },
+  { lemma: 'fare', tense: 'present', singular: ['faccio', 'fai'], plural: ['facciamo', 'fate'] },
+  { lemma: 'dire', tense: 'present', singular: ['dico', 'dici'], plural: ['diciamo', 'dite'] },
+  { lemma: 'vivere', tense: 'present', singular: ['vivo', 'vivi'], plural: ['viviamo', 'vivete'] },
+  {
+    lemma: 'lavorare',
+    tense: 'present',
+    singular: ['lavoro', 'lavori'],
+    plural: ['lavoriamo', 'lavorate'],
+  },
   {
     lemma: 'potere',
     tense: 'present',

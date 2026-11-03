@@ -27,6 +27,16 @@ describe('reflectFragment', () => {
     );
   });
 
+  it('reflects common present forms of fare, dire, vivere, and lavorare', () => {
+    expect(
+      reflectFragment(
+        'faccio fai facciamo fate; dico dici diciamo dite; vivo vivi viviamo vivete; lavoro lavori lavoriamo lavorate.',
+      ).text,
+    ).toBe(
+      'fai faccio fate facciamo; dici dico dite diciamo; vivi vivo vivete viviamo; lavori lavoro lavorate lavoriamo.',
+    );
+  });
+
   it('reflects clitics and elisions once, preserving apostrophe style', () => {
     const result = reflectFragment('L’HO, l’hai; sentirmi, vederti, capirmi.');
 

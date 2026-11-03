@@ -68,6 +68,29 @@ I comandi sono locali; `*` può essere usato come prefisso facoltativo.
 | `MOTION ON`, `MOTION OFF` | Attiva o disattiva gli effetti di movimento. |
 | `THEME GREEN`, `THEME AMBER` | Seleziona i fosfori verdi o ambra. |
 
+### Come conversare
+
+Scrivi in italiano un pensiero o un argomento concreto, poi prova ad aggiungere
+dettagli alle domande di ELIZA. Il motore non comprende il testo: applica regole,
+riformula alcune frasi e può richiamare messaggi precedenti; una risposta può quindi
+sembrare fuori tema. Modalità e sequenza degli scambi possono cambiare le risposte.
+
+Esempio di una sequenza in modalità `HISTORICAL`:
+
+```text
+TU: La mia bicicletta è rossa.
+ELIZA: Che cosa rappresenta per te questa cosa?
+TU: xyzzy
+ELIZA: Puoi raccontarmi qualcosa in più?
+TU: blorb
+ELIZA: Tengo presente «La mia bicicletta è rossa». Su quale parte vuoi soffermarti?
+```
+
+Le parole senza corrispondenze attivano risposte generiche; in questo esempio, dopo
+alcuni messaggi, ELIZA richiama un input precedente dalla memoria. È un esperimento
+conversazionale, non una terapeuta e non offre assistenza o consulenza psicologica.
+Digita `HELP` nell’app per leggere la guida e l’elenco dei comandi locali.
+
 Il colore è verde all’avvio e la scelta rimane nella scheda senza essere salvata.
 Modalità, seed e contatore degli scambi sono disponibili nelle impostazioni, ma non sono
 necessari per la conversazione: il seed rende riproducibili le scelte di `MODE VARIED`

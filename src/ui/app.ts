@@ -295,8 +295,7 @@ export function startApplication(): void {
       case 'help':
         await appendMessage(
           'system',
-          'Comandi locali: HELP, ABOUT, CLEAR, RESET, TRACE ON/OFF, MODE HISTORICAL/DETERMINISTIC/VARIED, SEED <uint32>, SPEED <0–80>, THEME GREEN/AMBER, MOTION ON/OFF, EXPORT, DELETE SESSION. Usa * anche come prefisso facoltativo.',
-          true,
+          'Per iniziare: scrivi in italiano un pensiero o un argomento concreto, poi prova ad aggiungere dettagli alle domande di ELIZA. Il motore non comprende il testo: applica regole, riformula alcune frasi e può richiamare messaggi precedenti; le risposte possono quindi sembrare fuori tema. Non è una terapeuta né offre assistenza.\n\nEsempio (una possibile sequenza in modalità HISTORICAL):\nTU: La mia bicicletta è rossa.\nELIZA: Che cosa rappresenta per te questa cosa?\nTU: xyzzy\nELIZA: Puoi raccontarmi qualcosa in più?\nTU: blorb\nELIZA: Tengo presente «La mia bicicletta è rossa». Su quale parte vuoi soffermarti?\n\nComandi locali: HELP, ABOUT, CLEAR, RESET, TRACE ON/OFF, MODE HISTORICAL/DETERMINISTIC/VARIED, SEED <uint32>, SPEED <0–80>, THEME GREEN/AMBER, MOTION ON/OFF, EXPORT, DELETE SESSION. Usa * anche come prefisso facoltativo.',
         );
         return;
       case 'about':

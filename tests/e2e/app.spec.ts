@@ -164,7 +164,11 @@ test.describe('applicazione ELIZA locale', () => {
     const history = conversation(page);
 
     await submit(page, 'HELP');
+    await expect(history).toContainText('Per iniziare:');
+    await expect(history).toContainText('Il motore non comprende il testo');
+    await expect(history).toContainText('Non è una terapeuta');
     await expect(history).toContainText('Comandi locali:');
+    await expect(history).toContainText('Tengo presente «La mia bicicletta è rossa»');
 
     await submit(page, 'Mi sento triste');
     await expect(page.getByText(/^SCAMBI/).locator('strong')).toHaveText('1');
