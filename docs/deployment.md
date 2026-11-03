@@ -36,3 +36,15 @@ npm run test:e2e
 `npm run build` esegue il typecheck e poi `vite build`; `npm run dev` serve in locale su loopback. La workflow CI è configurata per installare dipendenze, eseguire controlli, test, build ed e2e. La presenza dei comandi e della workflow descrive la configurazione, non il loro esito.
 
 Questo documento non attesta l'esito dei controlli, della build o del deployment.
+
+## Azure Static Web Apps
+
+Il workflow [Azure Static Web Apps CI/CD](../.github/workflows/azure-static-web-apps-zealous-flower-0aaf3e903.yml)
+usa Oryx per compilare l'app dalla radice del repository (`app_location: "/"`).
+`npm run build` genera gli asset in `dist/`: il parametro `output_location: "dist"`
+indica ad Azure la cartella da pubblicare, relativa ad `app_location`.
+`api_location` resta vuoto perche l'app non ha un backend.
+
+Se la build termina correttamente ma il deploy segnala che Oryx non trova gli
+artefatti, verificare che `output_location` corrisponda alla directory generata da
+Vite. Dopo il push della correzione su `main`, il workflow avvia un nuovo deployment.
