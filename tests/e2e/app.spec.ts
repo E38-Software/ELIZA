@@ -102,9 +102,24 @@ test.describe('applicazione ELIZA locale', () => {
     await page.getByRole('button', { name: /Esplora le decisioni/ }).click();
     await expect(panel).toBeVisible();
     await expect(page.locator('#trace-summary')).toHaveText('Scambio 1 · HISTORICAL');
-    await expect(panel).toContainText('mi-sento');
-    await expect(panel).toContainText('pattern: mi sento');
-    await expect(panel).toContainText('Le frasi già scritte vengono usate a turno');
+    await panel.getByRole('button', { name: /Voglio i dettagli tecnici/ }).click();
+    const stepGlossary = page.locator('#trace-step .glossary');
+    await expect(stepGlossary).toHaveAttribute('open', '');
+    await expect(stepGlossary.locator('dt', { hasText: 'NFC' })).toBeVisible();
+    await expect(stepGlossary).toContainText('accento combinante');
+    await stepGlossary.locator('summary').click();
+    await panel.getByRole('button', { name: 'Avanti' }).click();
+    await expect(page.locator('#trace-progress')).toContainText('Passaggio 2 di 6');
+    await expect(stepGlossary).not.toHaveAttribute('open', '');
+    await panel.getByRole('button', { name: 'Mostra tutto l’albero' }).click();
+    await expect(page.locator('#tree-glossary')).toBeVisible();
+    await expect(page.locator('#tree-glossary dt', { hasText: 'Stack' })).toBeVisible();
+    await expect(page.locator('#decision-tree')).toContainText('it-mi-sento · priorità');
+    await expect(page.locator('#decision-tree')).toContainText('it-mi-sento-d1: mi sento');
+    await panel.getByRole('button', { name: 'Passaggio 3: Decomposizione' }).click();
+    await expect(page.locator('#trace-step')).toContainText('pattern: mi sento');
+    await panel.getByRole('button', { name: 'Passaggio 5: Ricomposizione' }).click();
+    await expect(page.locator('#trace-step')).toContainText('indice di rotazione');
     await panel.getByText('Dati tecnici completi dell’ultimo scambio').click();
     await expect(page.locator('#trace-content')).toContainText('originalInput');
     await expect(page.locator('#trace-content')).toContainText('selectedKeyword');
@@ -129,54 +144,93 @@ test.describe('applicazione ELIZA locale', () => {
     expect(exported).toContain('selectedKeyword: it-mi-sento');
   });
 
-  test('anima e riproduce il percorso reale senza bloccare la chat', async ({ page }) => {
+  test('chiede il livello all’apertura e lo ricorda solo nella scheda', async ({ page }) => {
+    await openApplication(page);
+    const opener = page.getByRole('button', { name: /Esplora le decisioni/ });
+    const panel = page.getByRole('dialog', { name: 'Il percorso decisionale' });
+    await opener.click();
+    await expect(panel.getByRole('heading', { name: 'Da dove partiamo?' })).toBeFocused();
+    await expect(panel.getByRole('button', { name: /Parto da zero/ })).toBeVisible();
+    await expect(panel.getByRole('button', { name: /Conosco le basi/ })).toBeVisible();
+    await expect(panel.getByRole('button', { name: /Voglio i dettagli tecnici/ })).toBeVisible();
+    await expect(panel.getByRole('group', { name: 'Livello delle spiegazioni' })).toBeHidden();
+    await panel.getByRole('button', { name: /Conosco le basi/ }).click();
+    await expect(page.locator('#trace-level-picker')).toBeHidden();
+    await expect(page.locator('#trace-progress')).toContainText('Invia un messaggio');
+    await expect(panel.getByRole('button', { name: 'Intermedio', exact: true })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await page.getByRole('button', { name: 'Chiudi il pannello decisionale' }).click();
+    await opener.click();
+    await expect(page.locator('#trace-level-picker')).toBeHidden();
+    expect(await page.evaluate(() => localStorage.length + sessionStorage.length)).toBe(0);
+  });
+
+  test('esplora l’albero passo passo, senza animazioni automatiche', async ({ page }) => {
     await openApplication(page);
     await submit(page, 'SPEED 0');
     await page.getByRole('button', { name: /Esplora le decisioni/ }).click();
+    const panel = page.getByRole('dialog', { name: 'Il percorso decisionale' });
+    await panel.getByRole('button', { name: /Parto da zero/ }).click();
     await submit(page, 'Mia madre mi ascolta');
-    const steps = page.locator('.decision-step');
-    await expect(steps).toHaveCount(6);
-    await expect(page.locator('.decision-step[data-state="active"]')).toHaveCount(1);
-    await expect(page.locator('.decision-step[data-state="pending"]')).not.toHaveCount(0);
-    await expect(page.locator('.trace-chips span').first()).toHaveCSS(
-      'animation-name',
-      'trace-item-in',
-    );
+    const progress = page.locator('#trace-progress');
+    const visible = page.locator('#decision-tree .tree-node:visible');
+    await expect(progress).toContainText('Passaggio 1 di 6');
+    await expect(visible).toHaveCount(1);
+    await expect(page.locator('#trace-step')).toContainText('lettera per lettera');
+    await expect(page.locator('#trace-step .glossary')).toHaveCount(0);
+    await expect(page.locator('#tree-glossary')).toBeHidden();
+    await page.waitForTimeout(3200);
+    await expect(progress).toContainText('Passaggio 1 di 6');
+    expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
+
+    await panel.getByRole('button', { name: 'Avanti' }).click();
+    await expect(progress).toContainText('Passaggio 2 di 6');
     await expect(
-      page.getByRole('button', { name: 'Passaggio 2: Cerca una parola da cui partire' }),
-    ).toHaveAttribute('aria-current', 'step', { timeout: 5000 });
-    await page.getByRole('button', { name: 'Pausa', exact: true }).click();
-    await expect(page.getByRole('button', { name: 'Riprendi', exact: true })).toBeEnabled();
-    await expect(page.locator('#decision-tree')).toHaveAttribute('data-playback', 'paused');
-    await page.getByRole('button', { name: 'Passo successivo', exact: true }).click();
-    await expect(page.locator('#trace-progress')).toContainText('Passaggio 3 di 6');
-    await page.getByRole('button', { name: 'Passaggio 6: Ecco come nasce la risposta' }).click();
-    await page.getByRole('button', { name: 'Mostra tutto', exact: true }).click();
-    await expect(page.locator('#trace-progress')).toHaveText('Percorso completo');
-    await expect(steps.last()).toBeInViewport();
-    await expect(page.locator('[data-result="unvisited"]')).not.toHaveCount(0);
-    await expect(page.locator('[data-result="alternative"]')).not.toHaveCount(0);
-    await expect(page.locator('[data-result="selected"]')).not.toHaveCount(0);
-    await page.getByRole('button', { name: 'Rivedi animazione' }).click();
-    await expect(page.locator('.decision-step[data-state="active"]')).toHaveCount(1);
+      panel.getByRole('button', { name: 'Passaggio 2: Cerca parole che conosce' }),
+    ).toHaveAttribute('aria-current', 'step');
+    await expect(visible).toHaveCount(4);
+    await expect(page.locator('#decision-tree .tree-node[data-new]:visible')).toHaveCount(3);
+    await expect(page.locator('#trace-legend')).toContainText('2 non provati');
+    await panel.getByRole('button', { name: 'Indietro' }).click();
+    await expect(progress).toContainText('Passaggio 1 di 6');
+
+    await panel.getByRole('button', { name: 'Mostra tutto l’albero' }).click();
+    await expect(progress).toContainText('Passaggio 6 di 6');
+    const response = page.locator('#decision-tree .tree-node[data-kind="response"]');
+    await expect(response).toBeVisible();
+    await expect(response).toContainText('Che cosa succede nella tua famiglia?');
+    await expect(page.locator('#decision-tree [data-state="alternative"]:visible')).not.toHaveCount(
+      0,
+    );
+    await expect(page.locator('#decision-tree [data-trunk="joint"]:visible')).not.toHaveCount(0);
+    await expect(panel.getByRole('button', { name: 'Avanti' })).toBeDisabled();
+    await expect(page.locator('#trace-step')).toContainText('LLM');
+
+    await panel.getByRole('button', { name: 'Esperto', exact: true }).click();
+    await expect(progress).toContainText('Passaggio 6 di 6 · Output');
+    await expect(page.locator('#decision-tree')).toContainText('it-famiglia');
+    await expect(page.locator('#trace-step .step-technical')).toHaveAttribute('open', '');
+
     await submit(page, 'xyzzy');
     await expect(page.locator('#trace-summary')).toHaveText('Scambio 2 · HISTORICAL');
+    await expect(progress).toContainText('Passaggio 1 di 6');
     await expect(page.locator('#decision-tree')).not.toContainText('it-famiglia');
     await page.getByRole('button', { name: 'Chiudi il pannello decisionale' }).click();
     await expect(page.getByRole('button', { name: /Esplora le decisioni/ })).toBeFocused();
-    await expect(page.locator('.decision-step[data-state="active"]')).toHaveCount(0);
   });
 
   test('spiega visivamente memoria vuota, nuovo ricordo e ricordo recuperato', async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'reduce' });
     await openApplication(page);
     await submit(page, 'Mi sento triste');
     await page.getByRole('button', { name: /Esplora le decisioni/ }).click();
+    await page.getByRole('button', { name: /Conosco le basi/ }).click();
     const memoryButton = page.getByRole('button', {
       name: 'Passaggio 4: Riusa parole e piccoli ricordi',
     });
     await memoryButton.click();
-    const memory = page.locator('.decision-step').nth(3);
+    const memory = page.locator('#trace-step');
     await expect(memory).toContainText('Non è un punteggio');
     await expect(memory).toContainText('non tutta la conversazione');
     await expect(memory.locator('.trace-comparison strong')).toHaveText([
@@ -189,39 +243,21 @@ test.describe('applicazione ELIZA locale', () => {
       'Nessun ricordo',
       '1 ricordo',
     ]);
-    await expect(memory).toContainText('Conservato per un turno futuro');
+    await expect(memory).toContainText('preparato nuovi ricordi');
+    await expect(page.locator('#decision-tree .tree-node[data-kind="memory"]')).toContainText(
+      'Ricordo conservato per un turno futuro',
+    );
     await submit(page, 'xyzzy');
     await memoryButton.click();
     await expect(memory.locator('.trace-comparison strong')).toHaveText([
       '1 ricordo',
       'Nessun ricordo',
     ]);
-    await expect(memory).toContainText('Ripreso dalla memoria');
-    await expect(page.locator('.decision-step[data-state="active"]')).toHaveCSS(
-      'animation-name',
-      'none',
-    );
-  });
-
-  test('completa automaticamente le sei scene e MOTION OFF interrompe anche gli effetti', async ({
-    page,
-  }) => {
-    await openApplication(page);
-    await submit(page, 'SPEED 0');
-    await submit(page, 'Mi sento triste');
-    await page.getByRole('button', { name: /Esplora le decisioni/ }).click();
-    await expect(page.locator('#trace-progress')).toContainText('Passaggio 1 di 6');
-    await expect(page.locator('#trace-progress')).toHaveText('Percorso completo', {
-      timeout: 22_000,
-    });
-    await expect(page.locator('.decision-step[data-state="complete"]')).toHaveCount(6);
-    await expect(page.locator('.decision-step').last()).toBeInViewport();
-    await page.getByRole('button', { name: 'Rivedi animazione' }).click();
-    await expect(page.locator('.decision-step[data-state="active"]')).toHaveCount(1);
-    await submit(page, 'MOTION OFF');
-    await expect(page.locator('.decision-step[data-state="active"]')).toHaveCount(0);
-    await expect(page.locator('#decision-tree')).toHaveAttribute('data-playback', 'paused');
-    await expect(page.locator('.trace-chips span').first()).toHaveCSS('animation-name', 'none');
+    await expect(memory).toContainText('recuperato il ricordo più vecchio');
+    await page.getByRole('button', { name: 'Mostra tutto l’albero' }).click();
+    await expect(
+      page.locator('#decision-tree .tree-node[data-kind="memory"][data-state="selected"]'),
+    ).toBeVisible();
   });
 
   test('sposta il pannello con mouse e tastiera e lo mantiene nel viewport', async ({ page }) => {
@@ -262,22 +298,23 @@ test.describe('applicazione ELIZA locale', () => {
     await expect(panel).not.toBeVisible();
   });
 
-  test('con movimento ridotto mostra subito tutto e cancella le vecchie animazioni al reset', async ({
-    page,
-  }) => {
-    await page.emulateMedia({ reducedMotion: 'reduce' });
+  test('RESET svuota albero, passaggi e dati della traccia', async ({ page }) => {
     await openApplication(page);
     await submit(page, 'Mi sento triste');
     await page.getByRole('button', { name: /Esplora le decisioni/ }).click();
-    await expect(page.locator('.decision-step[data-state="complete"]')).toHaveCount(6);
-    await page.getByRole('button', { name: 'Rivedi animazione' }).click();
-    await expect(page.locator('.decision-step[data-state="active"]')).toHaveCount(0);
+    await page.getByRole('button', { name: /Conosco le basi/ }).click();
+    await expect(page.locator('#trace-step-title')).toBeFocused();
+    await expect(page.locator('#decision-tree .tree-node')).not.toHaveCount(0);
+    const next = page.getByRole('button', { name: 'Avanti' });
+    await expect(next).toBeEnabled();
     await submit(page, 'RESET');
     await expect(page.locator('#decision-tree')).toBeEmpty();
+    await expect(page.locator('#trace-navigation')).toBeEmpty();
     await expect(page.locator('#trace-content')).toBeEmpty();
-    await expect(page.getByRole('button', { name: 'Rivedi animazione' })).toBeDisabled();
+    await expect(next).toBeDisabled();
     await submit(page, 'Mi sento triste');
     await expect(page.locator('#trace-summary')).toHaveText('Scambio 1 · HISTORICAL');
+    await expect(next).toBeEnabled();
   });
 
   test('sceglie fosfori verdi o ambra e offre motion e testo regolabili', async ({ page }) => {
@@ -327,17 +364,32 @@ test.describe('applicazione ELIZA locale', () => {
     await motion.check();
     await expect(page.locator('body')).toHaveAttribute('data-motion', 'on');
 
+    const fontSize = (selector: string) =>
+      page
+        .locator(selector)
+        .first()
+        .evaluate((node) => parseFloat(getComputedStyle(node).fontSize));
+    const scaled = [
+      '.message-body',
+      '.message-label',
+      '.disclaimer',
+      '.feature-button',
+      '.setting',
+    ];
+    const before = await Promise.all(scaled.map(fontSize));
+    expect(Math.min(...before)).toBeGreaterThanOrEqual(14);
     const textSize = page.getByRole('slider', { name: 'Dimensione testo' });
+    await expect(textSize).toHaveValue('120');
     await textSize.focus();
     await textSize.press('End');
-    await expect(textSize).toHaveValue('22');
+    await expect(textSize).toHaveValue('200');
     await expect
       .poll(() =>
-        page.evaluate(() =>
-          document.documentElement.style.getPropertyValue('--terminal-font-size'),
-        ),
+        page.evaluate(() => document.documentElement.style.getPropertyValue('--text-scale')),
       )
-      .toBe('22px');
+      .toBe('2');
+    const after = await Promise.all(scaled.map(fontSize));
+    after.forEach((size, index) => expect(size / (before[index] ?? 1)).toBeCloseTo(200 / 120, 2));
   });
 
   test('esegue HELP, CLEAR, RESET, MODE e SEED come comandi locali', async ({ page }) => {

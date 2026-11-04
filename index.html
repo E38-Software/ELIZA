@@ -18,7 +18,7 @@
       <header class="terminal-header flex items-baseline justify-between">
         <h1 id="terminal-title">ELIZA</h1>
         <div
-          class="flex min-w-0 max-w-full flex-wrap items-center gap-2 font-[family-name:var(--font-interface)] text-[11px] text-[color:var(--quiet)]"
+          class="flex min-w-0 max-w-full flex-wrap items-center gap-2 font-[family-name:var(--font-interface)] text-sm text-[color:var(--quiet)]"
         >
           <span>App web di</span>
           <a
@@ -161,10 +161,20 @@
 
               <label class="setting" for="text-size">
                 <span
-                  >Dimensione testo
-                  <output id="text-size-value" for="text-size">16 px</output></span
+                  >Dimensione testo <output id="text-size-value" for="text-size">120%</output></span
                 >
-                <input id="text-size" type="range" min="14" max="22" value="16" />
+                <input
+                  id="text-size"
+                  type="range"
+                  min="90"
+                  max="200"
+                  step="10"
+                  value="120"
+                  aria-describedby="text-size-help"
+                />
+                <small id="text-size-help" class="setting-help"
+                  >Vale per tutta la pagina: chat, pulsanti, impostazioni e finestre.</small
+                >
               </label>
 
               <label class="setting" for="speed-range">
@@ -201,7 +211,7 @@
         </section>
       </main>
       <footer
-        class="mt-4 border-t border-[color:var(--line)] px-0.5 pt-3 font-[family-name:var(--font-interface)] text-[11px] leading-[1.5] text-[color:var(--quiet)] [overflow-wrap:anywhere]"
+        class="mt-4 border-t border-[color:var(--line)] px-0.5 pt-3 font-[family-name:var(--font-interface)] text-sm leading-[1.5] text-[color:var(--quiet)] [overflow-wrap:anywhere]"
       >
         Un progetto web di
         <a
@@ -238,45 +248,98 @@
           data-close
           aria-label="Chiudi il pannello decisionale"
         >
-          Chiudi ×
+          <span class="close-word">Chiudi</span> ×
         </button>
       </header>
       <div class="trace-controls">
         <div class="trace-toolbar">
           <strong id="trace-summary">Nessuna traccia disponibile</strong>
-          <button id="trace-replay" class="quiet-button" type="button" disabled>
-            Rivedi animazione
-          </button>
+          <div
+            id="trace-level-switch"
+            class="level-switch"
+            role="group"
+            aria-label="Livello delle spiegazioni"
+            hidden
+          >
+            <button type="button" data-level="beginner" aria-pressed="false">Base</button>
+            <button type="button" data-level="intermediate" aria-pressed="false">Intermedio</button>
+            <button type="button" data-level="expert" aria-pressed="false">Esperto</button>
+          </div>
         </div>
-        <nav
-          id="trace-navigation"
-          class="trace-navigation"
-          aria-label="Esplora i passaggi della risposta"
-        ></nav>
-        <div class="trace-playback">
-          <button id="trace-pause" class="quiet-button" type="button" disabled>Pausa</button>
-          <button id="trace-next" class="quiet-button" type="button" disabled>
-            Passo successivo
-          </button>
-          <button id="trace-all" class="quiet-button" type="button" disabled>Mostra tutto</button>
+        <div id="trace-stepper" class="trace-stepper" hidden>
+          <ol
+            id="trace-navigation"
+            class="trace-navigation"
+            aria-label="Passaggi della risposta"
+          ></ol>
+          <div class="trace-step-actions">
+            <button id="trace-previous" class="quiet-button" type="button" disabled>
+              <span aria-hidden="true">←</span> Indietro
+            </button>
+            <button id="trace-next" class="quiet-button" type="button" disabled>
+              Avanti <span aria-hidden="true">→</span>
+            </button>
+            <button id="trace-all" class="quiet-button" type="button" disabled>
+              Mostra tutto<span class="wide-only"> l’albero</span>
+            </button>
+          </div>
         </div>
-        <p id="trace-progress" class="tool-note" role="status"></p>
       </div>
       <div class="dialog-body">
-        <p id="trace-description" class="tool-note">
-          Segui come le tue parole diventano una risposta. Le scene ripercorrono regole già
-          eseguite: l’animazione non è il tempo di calcolo. Usa Pausa per leggere con calma o scegli
-          un passaggio. Puoi trascinare questa finestra dall’intestazione.
-        </p>
-        <ol id="decision-tree" class="decision-tree" aria-label="Percorso delle regole"></ol>
-        <details class="trace-details">
-          <summary>Dati tecnici completi dell’ultimo scambio</summary>
-          <div id="trace-content" class="trace-content"></div>
-        </details>
-        <p class="tool-note">
-          La traccia può contenere il testo digitato. Resta nella memoria di questa scheda; EXPORT
-          la scarica solo su richiesta.
-        </p>
+        <section id="trace-level-picker" class="level-picker" aria-labelledby="level-picker-title">
+          <p id="trace-description" class="tool-note">
+            Scopri, un passaggio alla volta, come le tue parole diventano una risposta. Puoi
+            trascinare questa finestra dall’intestazione e continuare a scrivere nella chat.
+          </p>
+          <h3 id="level-picker-title" tabindex="-1">Da dove partiamo?</h3>
+          <p>
+            Scegli quanto dettaglio preferisci: le spiegazioni si adattano. Puoi cambiare livello in
+            qualsiasi momento.
+          </p>
+          <div class="level-options">
+            <button type="button" class="level-option" data-level="beginner">
+              <strong>Parto da zero</strong>
+              <span>Spiegazioni semplici con esempi di tutti i giorni, senza termini tecnici.</span>
+            </button>
+            <button type="button" class="level-option" data-level="intermediate">
+              <strong>Conosco le basi</strong>
+              <span>I termini corretti, spiegati, e come le regole si collegano fra loro.</span>
+            </button>
+            <button type="button" class="level-option" data-level="expert">
+              <strong>Voglio i dettagli tecnici</strong>
+              <span>Identificatori, pattern, priorità, rotazione, seed e strutture dati.</span>
+            </button>
+          </div>
+        </section>
+        <div id="trace-explorer" class="trace-explorer" hidden>
+          <p id="trace-progress" class="trace-progress" role="status" tabindex="-1"></p>
+          <article id="trace-step" class="trace-step" aria-labelledby="trace-step-title"></article>
+          <section class="decision-map" aria-labelledby="decision-map-title">
+            <h3 id="decision-map-title">ALBERO DELLE POSSIBILITÀ</h3>
+            <p class="tool-note">
+              Ogni ramo è una strada che ELIZA poteva prendere; quella illuminata è la strada
+              percorsa davvero. A ogni passaggio compare un nuovo livello dell’albero.
+            </p>
+            <ul
+              id="trace-legend"
+              class="tree-legend"
+              aria-label="Legenda e conteggio dei rami"
+            ></ul>
+            <ul id="decision-tree" class="decision-tree" aria-label="Albero delle decisioni"></ul>
+            <details id="tree-glossary" class="glossary" hidden>
+              <summary>Termini usati nell’albero</summary>
+              <dl></dl>
+            </details>
+          </section>
+          <details class="trace-details">
+            <summary>Dati tecnici completi dell’ultimo scambio</summary>
+            <div id="trace-content" class="trace-content"></div>
+          </details>
+          <p class="tool-note">
+            La traccia può contenere il testo digitato. Resta nella memoria di questa scheda; EXPORT
+            la scarica solo su richiesta.
+          </p>
+        </div>
       </div>
     </dialog>
 
@@ -377,9 +440,10 @@
             una ricostruzione filologica.
           </p>
           <p>
-            Apri «Esplora le decisioni», invia una frase e osserva i rami verificati, esclusi o non
-            visitati. Il replay anima una traccia già prodotta dal motore: non misura tempi di
-            calcolo e non mostra pensieri o coscienza.
+            Apri «Esplora le decisioni», scegli quanto dettaglio vuoi, invia una frase e percorri
+            passo passo l’albero delle possibilità: rami scelti, scartati, non provati e
+            alternative. L’albero ricostruisce una traccia già prodotta dal motore: non mostra
+            pensieri o coscienza.
           </p>
           <p>
             Tutto avviene nel browser, senza LLM, API o salvataggio automatico. Ricaricare la pagina

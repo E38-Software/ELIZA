@@ -92,14 +92,10 @@ export function startApplication(): void {
   let engine = createItalianEngine({ mode: engineMode(mode), seed });
   const transcript: TranscriptEntry[] = [];
   const traces: StoredTrace[] = [];
-  const tracePanel = createTracePanel(
-    traceDialog,
-    italianScript,
-    () => motionEnabled && !window.matchMedia(REDUCED_MOTION_QUERY).matches,
-  );
+  const tracePanel = createTracePanel(traceDialog, italianScript);
   traceOpener.addEventListener('click', () => {
     keepTraceInBounds();
-    tracePanel.play();
+    tracePanel.opened();
   });
   window.matchMedia(REDUCED_MOTION_QUERY).addEventListener('change', (event) => {
     if (event.matches) {
@@ -197,10 +193,18 @@ export function startApplication(): void {
     motionToggle.checked = motionEnabled;
     typingToggle.checked = typingEnabled;
     announceToggle.checked = announceEnabled;
-    if (!motionEnabled) tracePanel.finish();
     speedRange.value = String(typingSpeed);
     speedValue.value = `${typingSpeed} ms`;
-    textSizeValue.value = `${textSizeRange.value} px`;
+    textSizeValue.value = `${textSizeRange.value}%`;
+    textSizeRange.setAttribute('aria-valuetext', `${textSizeRange.value}%`);
+  }
+
+  function applyTextSize(): void {
+    document.documentElement.style.setProperty(
+      '--text-scale',
+      String(Number(textSizeRange.value) / 100),
+    );
+    syncControls();
   }
 
   function addTrace(record: TraceRecord): void {
@@ -422,10 +426,7 @@ export function startApplication(): void {
     typingSpeed = Number(speedRange.value);
     syncControls();
   });
-  textSizeRange.addEventListener('input', () => {
-    document.documentElement.style.setProperty('--terminal-font-size', `${textSizeRange.value}px`);
-    syncControls();
-  });
+  textSizeRange.addEventListener('input', applyTextSize);
   element<HTMLButtonElement>('fullscreen-button').addEventListener('click', () => {
     if (document.fullscreenElement) {
       void document.exitFullscreen();
@@ -439,8 +440,7 @@ export function startApplication(): void {
     void deleteSession();
   });
 
-  syncControls();
-  document.documentElement.style.setProperty('--terminal-font-size', `${textSizeRange.value}px`);
+  applyTextSize();
   setBusy(true);
 
   void (async () => {

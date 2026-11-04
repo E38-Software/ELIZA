@@ -38,22 +38,35 @@ di ricomposizione. Distingue i rami verificati, esclusi e non visitati dalle ris
 alternative non scelte. Il metodo di selezione indica rotazione, seed ed estrazioni,
 contatore ciclico o richiamo della memoria, secondo il percorso effettivo.
 
-La vista guidata racconta sei passaggi in linguaggio comune, uno alla volta: mostra
-le parole come tessere, fa comparire progressivamente le verifiche e confronta la
-frase da completare con la risposta ottenuta. **Pausa**, **Riprendi**,
-**Passo successivo** e i sei pulsanti di navigazione permettono di leggere al proprio
-ritmo; **Mostra tutto** apre l’intero percorso. Ogni scena dura tre secondi nel replay.
+Alla prima apertura il pannello chiede da dove partire: **Parto da zero** (analogie
+quotidiane, niente gergo), **Conosco le basi** (i termini corretti, spiegati) o
+**Voglio i dettagli tecnici** (identificatori, pattern, priorità, rotazione, PRNG).
+Il livello si cambia in qualsiasi momento con **Base**, **Intermedio** ed **Esperto**;
+resta solo nella memoria della scheda, come il resto della sessione.
+
+La vista guidata non ha animazioni automatiche: si esplorano sei passaggi con
+**Indietro**, **Avanti**, i numeri dei passaggi o **Mostra tutto l’albero**. Ogni
+passaggio aggiunge un livello all’**albero delle possibilità**, ricostruito dalla
+traccia reale: messaggio, parole chiave, schemi provati, ricordi, risposte già scritte
+e risposta finale. Il percorso effettivo è illuminato; i rami verificati, scartati,
+non provati e le alternative restano visibili ma spenti, con una legenda che li conta.
+I redirect compaiono sotto la ricomposizione che li ha prodotti.
 
 La memoria ha due riquadri espliciti, **Prima di questo messaggio** e **Dopo questo
 messaggio**. «Nessun ricordo» in entrambi significa che non è stato conservato né
 recuperato un frammento, non un punteggio. Il pannello spiega anche la creazione e il
 richiamo dei ricordi: sono frasi preparate da alcune regole, non l’intera cronologia.
 
-L’animazione e **Rivedi animazione** ripercorrono dati già registrati: non rappresentano
-tempi di calcolo reali o ragionamenti di un modello. Le preferenze di movimento ridotto
-e `MOTION OFF` mostrano subito il percorso completo. I dettagli tecnici sono separati
-dalle spiegazioni e rimangono espandibili. Un avviso di sicurezza è segnalato come
-percorso separato, senza attribuirgli regole del motore non eseguite.
+L’albero ripercorre dati già registrati: non rappresenta tempi di calcolo reali o
+ragionamenti di un modello. Al livello esperto i dettagli tecnici sono aperti; al
+livello intermedio sono espandibili. Ai livelli intermedio ed esperto ogni passaggio
+e l’albero hanno un **glossario** che definisce tutti i termini tecnici visibili in quel
+momento (per esempio NFC, stack, coda FIFO, LIMIT, hash Hollerith, PRNG); un test
+verifica che nessun termine compaia senza definizione. Un avviso di sicurezza è segnalato come percorso
+separato, senza attribuirgli regole del motore non eseguite.
+
+**Dimensione testo**, nelle impostazioni, scala l’intera pagina (chat, pulsanti,
+impostazioni e finestre) dal 90% al 200%; il valore predefinito è 120%.
 
 Le tracce degli scambi precedenti rimangono esportabili con `EXPORT`; reset,
 cambio di modalità o seed le azzerano come lo stato del motore. Chiudere la finestra
