@@ -1,6 +1,7 @@
 # ELIZA — ricostruzione conversazionale locale
 
-Questa applicazione web, realizzata da [e38 srl](https://e38.it), ricrea nel browser,
+Questa applicazione web, realizzata da [e38 srl](https://e38.it) e
+[Monari Pietro](https://www.monaripietro.it/), ricrea nel browser,
 con regole esplicite e contenuti in italiano, alcuni meccanismi dell’ELIZA storica di
 Joseph Weizenbaum. È un esperimento conversazionale, non un sistema che comprende il
 linguaggio.

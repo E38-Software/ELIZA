@@ -63,21 +63,29 @@ test.describe('applicazione ELIZA locale', () => {
     await expect(about).toBeFocused();
   });
 
-  test('mostra il logo e accredita e38 srl nell’intestazione e nel piè di pagina', async ({
+  test('mostra il logo e accredita E38 e Monari Pietro nell’intestazione e nel piè di pagina', async ({
     page,
   }) => {
     await openApplication(page);
-    const headerLink = page.getByRole('banner').getByRole('link', { name: /e38 srl/i });
+    const header = page.getByRole('banner');
+    const headerLink = header.getByRole('link', { name: /e38 srl/i });
+    const monariHeaderLink = header.getByRole('link', { name: /monari pietro/i });
     const logo = headerLink.getByRole('img', { name: /e38 srl/i });
     await expect(logo).toBeVisible();
     await expect
       .poll(() => logo.evaluate((image) => (image as HTMLImageElement).naturalWidth))
       .toBeGreaterThan(0);
     await expect(headerLink).toHaveAttribute('href', /^https:\/\/e38\.it\/?$/);
-    const footerLink = page.getByRole('contentinfo').getByRole('link', { name: /e38 srl/i });
+    await expect(monariHeaderLink).toBeVisible();
+    await expect(monariHeaderLink).toHaveAttribute('href', 'https://www.monaripietro.it/');
+    const footer = page.getByRole('contentinfo');
+    const footerLink = footer.getByRole('link', { name: /e38 srl/i });
+    const monariFooterLink = footer.getByRole('link', { name: /monari pietro/i });
     await expect(footerLink).toBeVisible();
     await expect(footerLink).toHaveAttribute('href', /^https:\/\/e38\.it\/?$/);
-    for (const link of [headerLink, footerLink]) {
+    await expect(monariFooterLink).toBeVisible();
+    await expect(monariFooterLink).toHaveAttribute('href', 'https://www.monaripietro.it/');
+    for (const link of [headerLink, monariHeaderLink, footerLink, monariFooterLink]) {
       await expect(link).toHaveAttribute('target', '_blank');
       await expect(link).toHaveAttribute('rel', /\bnoopener\b/);
       await expect(link).toHaveAccessibleName(/nuova scheda/i);
